@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Árulók - Kastély</title>
+    <style>
+        /* --- 1. RÉSZ: A KINÉZET (CSS) --- */
+        body {
+            background-color: #1a1a1a; /* Sötét háttér */
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+        }
+        .container { max-width: 500px; margin: 0 auto; }
+        .card {
+            background-color: #2c2c2c;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+        }
+        input {
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: none;
+            width: 70%;
+            margin-bottom: 10px;
+        }
+        button {
+            background-color: #b71c1c; /* Vérvörös gomb */
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: bold;
+        }
+        button:disabled { background-color: #555; cursor: not-allowed; }
+        .role-card {
+            font-size: 24px;
+            padding: 30px;
+            border: 2px solid #555;
+            margin-top: 20px;
+        }
+        .traitor { color: #ff5252; border-color: #ff5252; }
+        .faithful { color: #69f0ae; border-color: #69f0ae; }
+        ul { list-style: none; padding: 0; }
+        li { padding: 5px; border-bottom: 1px solid #444; }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="app">
+        <h1>🏰 A Kastély</h1>
+        <p>Betöltés...</p>
+    </div>
+
+    <script type="module">
+        // Firebase importálása az internetről
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, onSnapshot, updateDoc, setDoc, getDoc } 
+        from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // --- IDE MÁSOLD BE A SAJÁT FIREBASE CONFIGODAT! ---
+        const firebaseConfig = {
+            apiKey: "AIzaSy...", 
+            authDomain: "...",
+            projectId: "...",
+            storageBucket: "...",
+            messagingSenderId: "...",
+            appId: "..."
+        };
+
+        // Rendszer indítása
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        // Globális változók
+        const GAME_ID = "szoba_1";
+        let myId = localStorage.getItem("arulok_player_id");
+        
+        // Ha nincs ID-ja a játékosnak (most jött először), generálunk egyet
+        if (!myId) {
+            myId = "user_" + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem("arulok_player_id", myId);
+        }
+
+        const appDiv = document.getElementById("app");
+
+        // --- FŐ CIKLUS: Figyeljük az adatbázist ---
+        onSnapshot(doc(db, "games", GAME_ID), (snapshot) => {
+            if (!snapshot.exists()) {
+                // Ha még nincs játék, létrehozzuk az alapot
+                createInitialGame();
+                return;
+            }
+            const game = snapshot.data();
+            render(game);
+        });
+
+        // --- KÉPERNYŐ RAJZOLÓ (Render) ---
+        function render(game) {
+            const myPlayer = game.players[myId];
+
+            // 1. Állapot: Még nem léptem be
+            if (!myPlayer) {
+                appDiv.innerHTML = `
+                    <div class="card">
+                        <h2>Üdvözöllek!</h2>
+                        <input type="text" id="nameInput" placeholder="Írd be a neved">
+                        <button id="joinBtn">Belépés a kastélyba</button>
+                    </div>
+                `;
+                document.getElementById("joinBtn").onclick = () => joinGame(document.getElementById("nameInput").value);
+                return;
+            }
+
+            // 2. Állapot: Lobby (Várakozás)
+            if (game.state === "lobby") {
+                const playerList = Object.values(game.players).map(p => `<li>${p.name}</li>`).join("");
+                appDiv.innerHTML = `
+                    <div class="card">
+                        <h2>Várakozóban...</h2>
+                        <p>Te vagy: <strong>${myPlayer.name}</strong></p>
+                        <hr>
+                        <h3>Játékosok (${Object.keys(game.players).length}):</h3>
+                        <ul>${playerList}</ul>
+                        <br>
+                        <button id="startBtn">JÁTÉK INDÍTÁSA (Szereposztás)</button>
+                    </div>
+                `;
+                document.getElementById("startBtn").onclick = () => assignRoles(game);
+                return;
+            }
+
+            // 3. Állapot: Játék közben (Szerep megtekintése)
+            if (game.state === "started") {
+                const isTraitor = myPlayer.role === "traitor";
+                appDiv.innerHTML = `
+                    <div class="card">
+                        <h2>A Játék elkezdődött!</h2>
+                        <p>Ne mutasd meg senkinek a képernyődet.</p>
+                        
+                        <div class="role-card ${isTraitor ? 'traitor' : 'faithful'}">
+                            ${isTraitor ? '🗡️ ÁRULÓ VAGY!' : '🛡️ HŰSÉGES VAGY!'}
+                        </div>
+                        
+                        <p style="font-size:14px; margin-top:15px">
+                            ${isTraitor ? 'Célod: Öld meg az összes hűségest éjszakánként.' : 'Célod: Találd meg az árulókat és száműzd őket.'}
+                        </p>
+
+                        <button onclick="resetGame()" style="background:#555; margin-top:30px; font-size:12px">Játék újraindítása (Reset)</button>
+                    </div>
+                `;
+            }
+        }
+
+        // --- MŰVELETEK (Functions) ---
+
+        // Játék alapjának létrehozása (ha üres az adatbázis)
+        async function createInitialGame() {
+            await setDoc(doc(db, "games", GAME_ID), {
+                state: "lobby",
+                players: {}
+            });
+        }
+
+        // Csatlakozás
+        async function joinGame(name) {
+            if (!name) return alert("Írj be egy nevet!");
+            // Új játékos hozzáadása a meglévőkhöz (dot notation update)
+            await updateDoc(doc(db, "games", GAME_ID), {
+                [`players.${myId}`]: {
+                    name: name,
+                    role: null,
+                    isAlive: true
+                }
+            });
+        }
+
+        // Szereposztás logika (Csak a gombnyomó gépén fut le, de mindenkit frissít)
+        async function assignRoles(game) {
+            const playerIds = Object.keys(game.players);
+            if (playerIds.length < 2) return alert("Legalább 2 játékos kell!");
+
+            // Véletlenszerű keverés
+            playerIds.sort(() => Math.random() - 0.5);
+
+            // Az első ember lesz az Áruló (vagy több, ha akarod)
+            const traitorCount = 1; 
+            const newPlayersData = { ...game.players };
+
+            playerIds.forEach((id, index) => {
+                newPlayersData[id].role = index < traitorCount ? "traitor" : "faithful";
+            });
+
+            // Adatbázis frissítése
+            await updateDoc(doc(db, "games", GAME_ID), {
+                players: newPlayersData,
+                state: "started"
+            });
+        }
+
+        // Újraindítás (Globálissá tesszük, hogy a HTML-ből hívható legyen)
+        window.resetGame = async function() {
+            if(confirm("Biztos újraindítod? Minden elveszik!")) {
+                await setDoc(doc(db, "games", GAME_ID), {
+                    state: "lobby",
+                    players: {} // Üres játékos lista
+                });
+                localStorage.removeItem("arulok_player_id"); // Kijelentkezés
+                location.reload();
+            }
+        }
+
+    </script>
+</body>
+</html>
