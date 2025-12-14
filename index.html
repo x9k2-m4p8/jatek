@@ -93,14 +93,14 @@
         .btn-admin { background: linear-gradient(135deg, #a08c70, #5d4d38); color: #fff; margin-bottom: 15px; }
         .btn-qr { background: linear-gradient(135deg, #2c5f6b, #1a3c45); color: #e0c090; }
         
-        /* PREFERENCE BUTTONS */
-        .pref-container { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
+        /* PREFERENCE BUTTONS - MOST MÁR EGYMÁS ALATT */
+        .pref-container { display: flex; flex-direction: column; gap: 15px; align-items: center; margin-bottom: 20px; }
         .btn-pref { 
             background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); color: var(--gold-text);
-            font-size: 12px; padding: 10px; width: 48%; margin-top: 0;
+            font-size: 1.1em; padding: 15px; width: 100%; margin-top: 0;
         }
         .btn-pref.selected { 
-            background: var(--gold-button); color: var(--button-text); box-shadow: 0 0 10px var(--gold-button);
+            background: var(--gold-button); color: var(--button-text); box-shadow: 0 0 15px var(--gold-button);
         }
 
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
@@ -121,7 +121,7 @@
 <body>
 
     <div id="intro-modal">
-        <img id="intro-image" src="https://static.wikia.nocookie.net/thetraitors/images/e/e6/The_Traitors_Poster.jpg/revision/latest?cb=20230117215234" alt="Intro kép">
+        <img id="intro-image" src="https://static.wikia.nocookie.net/sorozatok/images/5/58/Az-arulok-gyilkossag-a-kastelyban_tvshow_image_cf4386717ce924e9350c34e3652d.png/revision/latest/thumbnail/width/360/height/360?cb=20231121175903&path-prefix=hu" alt="Intro kép">
         
         <div style="text-align: center; max-width: 80%;">
             <h2 id="welcome-name" style="margin-bottom: 10px; color: #fff;">Üdvözöllek...</h2>
@@ -225,7 +225,6 @@
         }
 
         // --- FŐ CIKLUS ---
-        // Segédváltozók, hogy ne fusson le többször az audio/timer
         let currentLocalState = "unknown"; 
         let introTimerRunning = false;
         let audioTriggered = false;
@@ -234,10 +233,8 @@
             if (!snapshot.exists()) { createInitialGame(); return; }
             const gameData = snapshot.data();
             
-            // Ha változott a state, reseteljük a triggereket
             if (gameData.state !== currentLocalState) {
                 currentLocalState = gameData.state;
-                // Ha introba léptünk, reseteljük az audio flaget
                 if (currentLocalState === "intro") audioTriggered = false;
             }
             
@@ -249,7 +246,6 @@
             const myPlayer = game.players[myId];
 
             if (!myPlayer) {
-                // ... (Belépő képernyő ugyanaz marad)
                 appDiv.innerHTML = `
                     ${logoHTML}
                     <div class="card">
@@ -311,46 +307,40 @@
                 return;
             }
 
-            // 2. FÁZIS: INTRO (3s csend -> Zene -> 99s várakozás)
+            // 2. FÁZIS: INTRO (3s csend -> Zene csak Tominál -> 99s várakozás)
             if (game.state === "intro") {
                 
-                // Audio lejátszása (MINDENKINÉL)
-                // Csak akkor, ha még nem indítottuk el ebben a fázisban
-                if (!audioTriggered) {
+                // Audio logikája: CSAK TOMI
+                if (isAdmin && !audioTriggered) {
                     audioTriggered = true;
-                    // 3 másodperc múlva indul a zene
                     setTimeout(() => {
                         const audio = document.getElementById("castle-audio");
-                        audio.src = "Intro.mp3"; // Feltételezzük, hogy létezik Intro.mp3
+                        audio.src = "Intro.mp3"; 
                         audio.volume = 1.0;
-                        audio.play().catch(e => console.log("Intro autoplay hiba (ha nincs interakció):", e));
+                        audio.play().catch(e => console.log("Intro autoplay hiba:", e));
                     }, 3000);
                 }
 
-                // IDŐZÍTŐ (CSAK TOMINÁL)
-                // 3s (csend) + 99s (zene) = 102s (1 perc 42 mp)
+                // Timer logikája: CSAK TOMI (ő vált majd át votingra)
                 if (isAdmin && !introTimerRunning) {
                     introTimerRunning = true;
+                    // 3s + 99s = 102s = 102000 ms
                     setTimeout(() => {
-                        // Ha letelt az idő, váltás Votingra
                         startVotingPhase();
                     }, 102000); 
                 }
 
+                // MINIMALISTA UI (Üres, csak Logo)
                 appDiv.innerHTML = `
                     ${logoHTML}
-                    <div class="card" style="padding: 50px 20px;">
-                        <h2 class="waiting-pulse" style="font-size: 1.5em; letter-spacing: 2px;">FIGYELEM...</h2>
-                        <p style="margin-top:20px; opacity:0.6;">Hallgassátok az üzenetet.</p>
-                        ${isAdmin ? '<p style="font-size:10px; margin-top:30px; opacity:0.3;">(Admin timer fut... 1p 42mp)</p>' : ''}
-                    </div>
+                    <p style="opacity:0.3; margin-top:50px; font-size:12px;">...</p>
+                    ${isAdmin ? '<p style="font-size:10px; opacity:0.3; margin-top:10px;">(Admin: Zene szól... 1p 39mp)</p>' : ''}
                 `;
                 return;
             }
 
-            // 3. FÁZIS: SZAVAZÁS (Gombok megjelennek)
+            // 3. FÁZIS: SZAVAZÁS
             if (game.state === "voting") {
-                // Ha beérünk ide, reseteljük a timer flaget a biztonság kedvéért
                 introTimerRunning = false;
 
                 let prefUI = `
@@ -363,23 +353,30 @@
                     </div>
                 `;
 
+                // LISTA CSAK TOMINÁL
+                let playersList = "";
+                if (isAdmin) {
+                    playersList = `
+                        <ul style="text-align:left;">
+                             ${playersArray.map(p => `<li><span>${p.name}</span> <span>${p.preference ? '🗳️ Választott' : '...'}</span></li>`).join('')}
+                        </ul>
+                    `;
+                }
+
                 let adminPanel = isAdmin ? `
                         <div style="border-top:1px solid var(--border-color); margin-top:20px; padding-top:15px;">
                             <h3>👑 Játékmester Panel</h3>
                             <p style="font-size:12px; opacity:0.7;">Ha mindenki választott:</p>
                             <button class="btn-admin" id="finalizeBtn">SORSOLÁS & EREDMÉNYHIRDETÉS</button>
                         </div>
-                    ` : `<p class="waiting-pulse">Várj, amíg mindenki választ...</p>`;
+                    ` : `<p class="waiting-pulse">Dönts bölcsen...</p>`;
 
                 appDiv.innerHTML = `
                     ${logoHTML}
                     <div class="card">
                         <h2>${myPlayer.name}</h2>
                         ${prefUI}
-                        <ul style="text-align:left;">
-                             ${playersArray.map(p => `<li><span>${p.name}</span> <span>${p.preference ? '🗳️ Választott' : '...'}</span></li>`).join('')}
-                        </ul>
-                        ${adminPanel}
+                        ${playersList} ${adminPanel}
                     </div>
                 `;
 
@@ -418,14 +415,12 @@
             await updateDoc(doc(db, "games", GAME_ID), { [`players.${myId}`]: { name: name, role: null, preference: null, isAlive: true } });
         }
 
-        // --- ÚJ FÁZIS INDÍTÓK ---
+        // --- FÁZIS INDÍTÓK ---
         async function startIntroPhase() {
-            // Indítja az INTRO-t
             await updateDoc(doc(db, "games", GAME_ID), { state: "intro" });
         }
 
         async function startVotingPhase() {
-            // Átvált a SZAVAZÁSRA (ezt a timer hívja meg Tominál)
             await updateDoc(doc(db, "games", GAME_ID), { state: "voting" });
         }
 
