@@ -163,7 +163,7 @@
         // --- ADATOK ---
         const PREDEFINED_PLAYERS = ["Tamás", "Panni", "Zoli", "Beus", "Luca", "Alex", "Dóri", "Lujzi", "Tomi"];
         
-        // HANG FILE TÉRKÉP (Név -> Fájlnév)
+        // FONTOS: Ékezetmentes fájlnevek a stabilitás miatt!
         const AUDIO_FILES = {
             "Tamás": "Tamás.mp3",
             "Panni": "Panni.mp3",
@@ -174,18 +174,6 @@
             "Dóri":  "Dóra.mp3",
             "Lujzi": "Lujzi.mp3",
             "Tomi":  "Tomi.mp3"
-        };
-
-        const WELCOME_MESSAGES = {
-            "Tamás": "Alezredes úr. A tartása katonás, az ábrázata pedig... nos, mintha Brad Pitt komolyabb ikertestvére lépett volna be. Remélem, a humora élesebb, mint a kései. Megtiszteltetés... talán.",
-            "Panni": "A hölgy, aki mások vérét veszi... remélem, ma este nem a miénket akarja. Úgy hallom, a technológia kifog önön, és a türelme sem végtelen. Javaslom, őrizze meg a hidegvérét, különben hamar elvérzik.",
-            "Zoli": "Asztalos. Hasznos szakma... a szolgák között. Azt mondják, végtelenül segítőkész. Nos, itt a jószívűség a leggyorsabb út a sírba. És a Barcelona? Őszinte részvétem. Egy süllyedő hajóhoz ragaszkodni hűségre vall, vagy... ostobaságra.",
-            "Beus": "A tanárnő, aki gyerekekkel vesződik. Milyen... nemes. De itt nincsenek csillogó szemek és uzsonnás dobozok, drágám. Itt csak árulás van. A túlzott kedvessége itt nem erény, hanem céltábla.",
-            "Luca": "A dietetikus. Kérem, ne kezdje el számolni a kalóriákat a vacsorámban, az annyira... polgári. A precizitása dicséretes, de itt a részletekben nem az ördög lakozik, hanem a gyilkos.",
-            "Alex": "A sofőr, aki mások luxusát vezeti, miközben a saját BMW-je... nos, mondjuk úgy, állandó pihenőnapon van. Arabul tanul? Érdekes. Talán imádkozhatna is azon a nyelven, hogy az autója beinduljon.",
-            "Dóri": "A munka nélküli jólét... irigylésre méltó tehetség. Úgy tudom, ön találta ki ezt a játékot, de most kénytelen a pórnép között játszani, miután átvettem a hatalmat. Milyen érzés a trónról a porba hullani?",
-            "Lujzi": "Nemzetközi tanulmányok... a világ nagy dolgai foglalkoztatják. Egy bank csendes irodájából nézve a világ biztosan... rendezettnek tűnik. És George Russell? Milyen bájos optimizmus. Értékelem a hűségét, még ha az eredmények váratnak is magukra. A határozott elveit azonban hagyja a kapun kívül. Itt a politika nem számít, csak a túlélés.",
-            "Tomi": "A házigazda. Vagy mondjam inkább: a teremtő? Kicsit sokat beszél a gépekkel, nem gondolja? Azt suttogják, ön a toalettek koronázatlan királya... nos, mindenki uralkodik valahol. Keverje a kártyákat, barátom."
         };
 
         let myId = localStorage.getItem("arulok_player_id");
@@ -216,24 +204,19 @@
                 audio.src = AUDIO_FILES[nameFromUrl];
             }
 
-            // 3. A gombnyomásra indul a belépés és a hang
-          // 3. A gombnyomásra indul a belépés és a hang
+            // 3. A gombnyomásra indul a belépés és a hang (Bőbeszédű hibakezeléssel)
             document.getElementById("enter-castle-btn").addEventListener("click", () => {
-                // Biztosítjuk, hogy be van töltve
                 audio.load(); 
                 audio.volume = 1.0; 
                 
-                // Megpróbáljuk lejátszani és elkapni a hibát
                 var playPromise = audio.play();
 
                 if (playPromise !== undefined) {
                     playPromise.then(_ => {
-                        // A lejátszás sikeresen elindult!
-                        console.log("Hang indul...");
+                        console.log("Hang lejátszása sikeres.");
                     })
                     .catch(error => {
-                        // ITT A LÉNYEG: Ha hiba van, kiírjuk a képernyőre!
-                        alert("Hang hiba: " + error.name + " - " + error.message);
+                        alert("Hang hiba: " + error.name + "\n(Ellenőrizd a néma gombot a telefon oldalán!)");
                     });
                 }
                 
@@ -247,9 +230,9 @@
                     window.history.replaceState({}, document.title, window.location.pathname);
                 });
             });
+
         } else {
-            // Ha NEM QR kóddal jött (Kézi belépés):
-            // A Modal rejtve marad, a sima felület jön be, ahol választhat nevet.
+            // Ha NEM QR kóddal jött, marad a manuális belépés
         }
 
         // --- FŐ CIKLUS ---
@@ -276,7 +259,7 @@
                     </div>
                 `;
                 
-                // KÉZI BELÉPÉS LOGIKA (Itt is kell hang!)
+                // KÉZI BELÉPÉS LOGIKA
                 window.manualJoin = () => {
                     const selectedName = document.getElementById("nameSelector").value;
                     if(selectedName) {
@@ -285,15 +268,13 @@
                         if(AUDIO_FILES[selectedName]) {
                             audio.src = AUDIO_FILES[selectedName];
                             audio.volume = 1.0;
-                            audio.play().catch(e => console.log(e));
+                            audio.play().catch(e => alert("Hang hiba: " + e.message));
                         }
                         joinGame(selectedName);
                     }
                 };
                 return;
             }
-
-            const personalMessage = WELCOME_MESSAGES[myPlayer.name] || "Üdvözöllek a játékban. Légy óvatos.";
 
             if (game.state === "lobby") {
                 const isAdmin = myPlayer.name === "Tomi";
@@ -308,13 +289,13 @@
                         <div id="qr-area"></div>
                     ` : `<p style="color:var(--gold-text); opacity:0.6; font-size:13px; margin-top:20px;">Várjuk Tomit a játék indításához...</p>`;
 
+                // ITT TÖRTÉNT A VÁLTOZÁS: Kivettem a szöveges üzenetet
                 appDiv.innerHTML = `
                     ${logoHTML}
                     <div class="card">
-                        <h2>${myPlayer.name}...</h2>
-                        <p style="font-style:italic; color:#e0c090; font-size:1.1em; line-height:1.5; margin-bottom:20px; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
-                            "${personalMessage}"
-                        </p>
+                        <h2>${myPlayer.name}</h2>
+                        <p style="color:#e0c090; font-style:italic; margin-bottom: 20px;">Bent vagy a játékban.</p>
+                        
                         <hr style="border-color:var(--border-color); opacity:0.3;">
                         <ul style="text-align:left;">
                             ${playersArray.map(p => `<li><span>${p.name}</span> <span>${p.name === myPlayer.name ? '(Te)' : '✅'}</span></li>`).join('')}
@@ -392,5 +373,3 @@
     </script>
 </body>
 </html>
-
-
