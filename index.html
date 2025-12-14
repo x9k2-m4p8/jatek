@@ -13,7 +13,9 @@
             --gold-text: #e0c090;     
             --gold-button: #c7b299;   
             --button-text: #0f2a30;   
-            --border-color: #2c5f6b;  
+            --border-color: #2c5f6b;
+            --traitor-color: #ff5252;
+            --faithful-color: #69f0ae;
         }
 
         body {
@@ -27,27 +29,17 @@
             min-height: 100vh;
         }
 
-        /* --- INTRO MODAL (Alapból rejtve, JS hozza elő ha kell) --- */
+        /* --- INTRO MODAL --- */
         #intro-modal {
-            display: none; /* Alapból rejtve! Csak QR kódnál jön elő */
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #000;
-            z-index: 9999;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            display: none;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #000; z-index: 9999;
+            flex-direction: column; align-items: center; justify-content: center;
         }
 
         #intro-image {
-            max-width: 100%;
-            max-height: 70vh;
-            object-fit: contain;
-            box-shadow: 0 0 50px rgba(0,0,0,0.8);
-            margin-bottom: 20px;
+            max-width: 100%; max-height: 70vh; object-fit: contain;
+            box-shadow: 0 0 50px rgba(0,0,0,0.8); margin-bottom: 20px;
             animation: zoomIn 5s ease-out infinite alternate;
         }
 
@@ -101,16 +93,29 @@
         .btn-admin { background: linear-gradient(135deg, #a08c70, #5d4d38); color: #fff; margin-bottom: 15px; }
         .btn-qr { background: linear-gradient(135deg, #2c5f6b, #1a3c45); color: #e0c090; }
         
+        /* PREFERENCE BUTTONS */
+        .pref-container { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
+        .btn-pref { 
+            background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); color: var(--gold-text);
+            font-size: 12px; padding: 10px; width: 48%; margin-top: 0;
+        }
+        .btn-pref.selected { 
+            background: var(--gold-button); color: var(--button-text); box-shadow: 0 0 10px var(--gold-button);
+        }
+
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
         
         .role-card { font-size: 28px; padding: 40px 20px; border: 2px solid; margin-top: 20px; background-color: rgba(0,0,0,0.4); border-radius: 8px; text-shadow: 0 0 10px currentColor; animation: fadeInUp 1s ease-out 0.5s both; }
-        .traitor { color: #ff5252; border-color: #ff5252; box-shadow: inset 0 0 20px rgba(255, 82, 82, 0.2); }
-        .faithful { color: #69f0ae; border-color: #69f0ae; box-shadow: inset 0 0 20px rgba(105, 240, 174, 0.2); }
+        .traitor { color: var(--traitor-color); border-color: var(--traitor-color); box-shadow: inset 0 0 20px rgba(255, 82, 82, 0.2); }
+        .faithful { color: var(--faithful-color); border-color: var(--faithful-color); box-shadow: inset 0 0 20px rgba(105, 240, 174, 0.2); }
         ul { list-style: none; padding: 0; }
         li { padding: 12px; border-bottom: 1px solid rgba(44, 95, 107, 0.3); display: flex; justify-content: space-between; }
         #qr-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; animation: fadeInUp 0.5s ease-out; }
         .qr-item { background: var(--gold-button); color: var(--button-text); padding: 15px; border-radius: 8px; width: 160px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
         .qr-item h4 { margin: 5px 0; font-size: 16px; font-weight: bold; }
+        
+        .waiting-pulse { animation: pulse 1.5s infinite; opacity: 0.7; font-size: 0.8em; margin-top: 5px;}
+        @keyframes pulse { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
     </style>
 </head>
 <body>
@@ -126,7 +131,6 @@
     </div>
 
     <audio id="castle-audio"></audio>
-
 
     <div class="fog-container">
         <div class="fog-layer"></div>
@@ -163,7 +167,6 @@
         // --- ADATOK ---
         const PREDEFINED_PLAYERS = ["Tamás", "Panni", "Zoli", "Beus", "Luca", "Alex", "Dóri", "Lujzi", "Tomi"];
         
-        // FONTOS: Ékezetmentes fájlnevek a stabilitás miatt!
         const AUDIO_FILES = {
             "Tamás": "Tamás.mp3",
             "Panni": "Panni.mp3",
@@ -189,50 +192,37 @@
         const urlParams = new URLSearchParams(window.location.search);
         const nameFromUrl = urlParams.get('name');
 
-        // Ha QR kóddal jött (van név az URL-ben):
         if (nameFromUrl && PREDEFINED_PLAYERS.includes(nameFromUrl)) {
-            // 1. Megjelenítjük a Modalt
             const modal = document.getElementById("intro-modal");
             const welcomeName = document.getElementById("welcome-name");
             const audio = document.getElementById("castle-audio");
             
-            modal.style.display = "flex"; // Megjelenítés
+            modal.style.display = "flex";
             welcomeName.innerText = `Üdvözöllek, ${nameFromUrl}`;
             
-            // 2. Beállítjuk a személyes hangot
             if(AUDIO_FILES[nameFromUrl]) {
                 audio.src = AUDIO_FILES[nameFromUrl];
             }
 
-            // 3. A gombnyomásra indul a belépés és a hang (Bőbeszédű hibakezeléssel)
             document.getElementById("enter-castle-btn").addEventListener("click", () => {
                 audio.load(); 
                 audio.volume = 1.0; 
                 
                 var playPromise = audio.play();
-
                 if (playPromise !== undefined) {
-                    playPromise.then(_ => {
-                        console.log("Hang lejátszása sikeres.");
-                    })
-                    .catch(error => {
-                        alert("Hang hiba: " + error.name + "\n(Ellenőrizd a néma gombot a telefon oldalán!)");
-                    });
+                    playPromise.then(_ => { console.log("Hang lejátszása sikeres."); })
+                    .catch(error => { alert("Hang hiba: " + error.name + "\n(Ellenőrizd a néma gombot!)"); });
                 }
                 
-                // Modal eltűnik
                 modal.style.transition = "opacity 1s ease";
                 modal.style.opacity = "0";
                 setTimeout(() => { modal.style.display = "none"; }, 1000);
 
-                // Belépés a rendszerbe
                 joinGame(nameFromUrl).then(() => {
                     window.history.replaceState({}, document.title, window.location.pathname);
                 });
             });
 
-        } else {
-            // Ha NEM QR kóddal jött, marad a manuális belépés
         }
 
         // --- FŐ CIKLUS ---
@@ -259,11 +249,9 @@
                     </div>
                 `;
                 
-                // KÉZI BELÉPÉS LOGIKA
                 window.manualJoin = () => {
                     const selectedName = document.getElementById("nameSelector").value;
                     if(selectedName) {
-                        // Hang lejátszása azonnal
                         const audio = document.getElementById("castle-audio");
                         if(AUDIO_FILES[selectedName]) {
                             audio.src = AUDIO_FILES[selectedName];
@@ -276,27 +264,26 @@
                 return;
             }
 
+            const playersArray = Object.values(game.players);
+            const isAdmin = myPlayer.name === "Tomi";
+
+            // 1. FÁZIS: LOBBY (Várakozás, még nincs választás)
             if (game.state === "lobby") {
-                const isAdmin = myPlayer.name === "Tomi";
-                const playersArray = Object.values(game.players);
                 let adminPanel = isAdmin ? `
                         <div style="border-top:1px solid var(--border-color); margin-top:20px; padding-top:15px;">
                             <h3>👑 Játékmester Panel</h3>
-                            <button class="btn-admin" id="startBtn">JÁTÉK INDÍTÁSA</button>
+                            <button class="btn-admin" id="startVotingBtn">SZEREPVÁLASZTÁS INDÍTÁSA</button>
                             <button class="btn-qr" id="qrBtn">QR Kódok Generálása</button>
                             <button onclick="resetGame()" style="background:transparent; border:1px solid var(--border-color); color:var(--gold-text); margin-top:15px; font-size:12px;">Reset</button>
                         </div>
                         <div id="qr-area"></div>
-                    ` : `<p style="color:var(--gold-text); opacity:0.6; font-size:13px; margin-top:20px;">Várjuk Tomit a játék indításához...</p>`;
+                    ` : `<p class="waiting-pulse">Várjuk Tomit a választás indításához...</p>`;
 
-                // ITT TÖRTÉNT A VÁLTOZÁS: Kivettem a szöveges üzenetet
                 appDiv.innerHTML = `
                     ${logoHTML}
                     <div class="card">
                         <h2>${myPlayer.name}</h2>
-                        <p style="color:#e0c090; font-style:italic; margin-bottom: 20px;">Bent vagy a játékban.</p>
-                        
-                        <hr style="border-color:var(--border-color); opacity:0.3;">
+                        <p style="color:#e0c090; font-style:italic; margin-bottom: 20px;">Lépj be a kastélyba...</p>
                         <ul style="text-align:left;">
                             ${playersArray.map(p => `<li><span>${p.name}</span> <span>${p.name === myPlayer.name ? '(Te)' : '✅'}</span></li>`).join('')}
                         </ul>
@@ -305,12 +292,56 @@
                 `;
 
                 if (isAdmin) {
-                    document.getElementById("startBtn").onclick = () => assignRoles(game);
+                    document.getElementById("startVotingBtn").onclick = () => startVotingPhase();
                     document.getElementById("qrBtn").onclick = () => showQRCodes();
                 }
                 return;
             }
 
+            // 2. FÁZIS: SZAVAZÁS (Gombok megjelennek)
+            if (game.state === "voting") {
+                
+                let prefUI = `
+                    <div style="margin: 20px 0; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px;">
+                        <p style="font-size:1.1em; font-weight:bold; margin-bottom:15px; color:#fff;">Válassz szerepet!</p>
+                        <div class="pref-container">
+                            <button class="btn-pref ${myPlayer.preference === 'traitor' ? 'selected' : ''}" onclick="setPreference('traitor')">🗡️ Inkább Áruló</button>
+                            <button class="btn-pref ${myPlayer.preference === 'faithful' ? 'selected' : ''}" onclick="setPreference('faithful')">🛡️ Inkább Hűséges</button>
+                        </div>
+                    </div>
+                `;
+
+                let adminPanel = isAdmin ? `
+                        <div style="border-top:1px solid var(--border-color); margin-top:20px; padding-top:15px;">
+                            <h3>👑 Játékmester Panel</h3>
+                            <p style="font-size:12px; opacity:0.7;">Ha mindenki választott, indítsd a sorsolást:</p>
+                            <button class="btn-admin" id="finalizeBtn">SORSOLÁS & JÁTÉK INDÍTÁSA</button>
+                        </div>
+                    ` : `<p class="waiting-pulse">Várjuk a többieket és Tomi indítását...</p>`;
+
+                appDiv.innerHTML = `
+                    ${logoHTML}
+                    <div class="card">
+                        <h2>${myPlayer.name}</h2>
+                        ${prefUI}
+                        <ul style="text-align:left;">
+                             ${playersArray.map(p => `<li><span>${p.name}</span> <span>${p.preference ? '🗳️ Választott' : '...'}</span></li>`).join('')}
+                        </ul>
+                        ${adminPanel}
+                    </div>
+                `;
+
+                window.setPreference = async (pref) => {
+                    await updateDoc(doc(db, "games", GAME_ID), { [`players.${myId}.preference`]: pref });
+                };
+
+                if (isAdmin) {
+                    document.getElementById("finalizeBtn").onclick = () => assignRolesAndStart(game);
+                }
+                return;
+            }
+
+            // 3. FÁZIS: JÁTÉK INDULT (Eredmény)
             if (game.state === "started") {
                 const isTraitor = myPlayer.role === "traitor";
                 appDiv.innerHTML = `
@@ -332,16 +363,58 @@
         async function createInitialGame() { await setDoc(doc(db, "games", GAME_ID), { state: "lobby", players: {} }); }
         
         async function joinGame(name) {
-            await updateDoc(doc(db, "games", GAME_ID), { [`players.${myId}`]: { name: name, role: null, isAlive: true } });
+            await updateDoc(doc(db, "games", GAME_ID), { [`players.${myId}`]: { name: name, role: null, preference: null, isAlive: true } });
         }
 
-        async function assignRoles(game) {
+        // ÚJ: Átállítja az állapotot "voting"-ra
+        async function startVotingPhase() {
+            await updateDoc(doc(db, "games", GAME_ID), { state: "voting" });
+        }
+
+        // ÚJ: Sorsol és indít
+        async function assignRolesAndStart(game) {
             const playerIds = Object.keys(game.players);
             if (playerIds.length < 3) return alert("Kevés a játékos (min 3)!");
-            playerIds.sort(() => Math.random() - 0.5);
-            const traitorCount = Math.max(1, Math.floor(playerIds.length / 4));
+            
+            // 1. Csoportosítás választás szerint
+            let wannabeTraitors = playerIds.filter(id => game.players[id].preference === 'traitor');
+            let others = playerIds.filter(id => game.players[id].preference !== 'traitor'); // Hűségesek + akik nem választottak
+
+            let selectedTraitors = [];
+
+            // 2. Logika alkalmazása
+            if (wannabeTraitors.length === 2) {
+                // Ha pontosan 2-en akarnak lenni -> Ők lesznek
+                selectedTraitors = wannabeTraitors;
+            
+            } else if (wannabeTraitors.length === 1) {
+                // Ha csak 1 akar lenni -> Ő + 1 random a többiek közül
+                selectedTraitors.push(wannabeTraitors[0]);
+                const randomPartner = others[Math.floor(Math.random() * others.length)];
+                selectedTraitors.push(randomPartner);
+            
+            } else if (wannabeTraitors.length > 2) {
+                // Ha több mint 2-en akarnak lenni -> Random 2 közülük
+                wannabeTraitors.sort(() => Math.random() - 0.5); 
+                selectedTraitors = wannabeTraitors.slice(0, 2);
+            
+            } else {
+                // Ha senki nem akart (0 fő)
+                let allPlayers = [...playerIds];
+                allPlayers.sort(() => Math.random() - 0.5);
+                selectedTraitors = allPlayers.slice(0, 2);
+            }
+
+            // 3. Mentés
             const newPlayersData = { ...game.players };
-            playerIds.forEach((id, index) => { newPlayersData[id].role = index < traitorCount ? "traitor" : "faithful"; });
+            playerIds.forEach(id => {
+                if (selectedTraitors.includes(id)) {
+                    newPlayersData[id].role = "traitor";
+                } else {
+                    newPlayersData[id].role = "faithful";
+                }
+            });
+
             await updateDoc(doc(db, "games", GAME_ID), { players: newPlayersData, state: "started" });
         }
 
