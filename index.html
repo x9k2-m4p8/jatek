@@ -3,36 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Árulók - Kastély</title>
+    <title>Árulók - Titkok a Kastélyból</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
+        /* --- ÚJ SZÍNVILÁG (A logó alapján) --- */
+        :root {
+            --dark-bg: #0f2a30;       /* Sötét kékes-zöld háttér */
+            --card-bg: #1a3c45;       /* Kicsit világosabb kártya háttér */
+            --gold-text: #e0c090;     /* Arany/bézs szövegszín */
+            --gold-button: #c7b299;   /* Arany gombszín */
+            --button-text: #0f2a30;   /* Sötét szöveg a gombon */
+            --border-color: #2c5f6b;  /* Sötét szegélyszín */
+        }
+
         body {
-            background-color: #1a1a1a;
-            color: #e0e0e0;
+            background-color: var(--dark-bg);
+            color: var(--gold-text);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             text-align: center;
             padding: 20px;
             margin: 0;
         }
-        .container { max-width: 600px; margin: 0 auto; }
-        .card {
-            background-color: #2c2c2c;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        .logo {
             margin-bottom: 20px;
         }
-        input {
+        .logo img {
+            max-width: 300px;
+            width: 100%;
+            height: auto;
+        }
+        .container { max-width: 600px; margin: 0 auto; }
+        .card {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+        }
+        input, select {
             padding: 10px;
             font-size: 16px;
             border-radius: 5px;
-            border: none;
-            width: 70%;
+            border: 1px solid var(--border-color);
+            width: 80%;
             margin-bottom: 10px;
+            background: var(--dark-bg);
+            color: var(--gold-text);
         }
         button {
-            background-color: #444;
-            color: white;
+            background-color: var(--gold-button);
+            color: var(--button-text);
             border: none;
             padding: 12px 24px;
             font-size: 16px;
@@ -41,27 +62,38 @@
             width: 100%;
             font-weight: bold;
             margin-top: 10px;
+            transition: background-color 0.2s;
         }
-        .btn-admin { background-color: #b71c1c; } /* Piros gomb Tominak */
-        .btn-qr { background-color: #0277bd; } /* Kék gomb QR generáláshoz */
+        button:hover { background-color: #e0d0c0; }
+        .btn-admin { background-color: #a08c70; color: #fff; } /* Kicsit sötétebb arany Tominak */
+        .btn-qr { background-color: #2c5f6b; color: var(--gold-text); } /* Kékes gomb QR-nek */
         
-        .role-card { font-size: 24px; padding: 30px; border: 2px solid #555; margin-top: 20px; }
+        .role-card {
+            font-size: 24px;
+            padding: 30px;
+            border: 3px solid;
+            margin-top: 20px;
+            background-color: rgba(0,0,0,0.3);
+        }
         .traitor { color: #ff5252; border-color: #ff5252; }
         .faithful { color: #69f0ae; border-color: #69f0ae; }
         
         ul { list-style: none; padding: 0; }
-        li { padding: 10px; border-bottom: 1px solid #444; display: flex; justify-content: space-between; }
+        li { padding: 10px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; }
         
         /* QR Kódok kinézete */
         #qr-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; }
-        .qr-item { background: white; color: black; padding: 10px; border-radius: 8px; width: 150px; }
-        .qr-item h4 { margin: 5px 0; font-size: 14px; }
+        .qr-item { background: var(--gold-button); color: var(--button-text); padding: 15px; border-radius: 8px; width: 160px; }
+        .qr-item h4 { margin: 5px 0; font-size: 16px; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <div class="container" id="app">
-        <h1>Betöltés...</h1>
+        <h1 class="logo">
+            <img src="https://static.wikia.nocookie.net/thetraitors/images/1/1d/HU_Traitors_Logo.webp/revision/latest?cb=20231106063519" alt="Árulók logó">
+        </h1>
+        <p>Betöltés...</p>
     </div>
 
     <script type="module">
@@ -69,22 +101,21 @@
         import { getFirestore, doc, onSnapshot, updateDoc, setDoc } 
         from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // --- MÁSOLD BE IDE A FIREBASE CONFIGODAT! ---
-         const firebaseConfig = {
-    apiKey: "AIzaSyCp4szmu2tUhVNSGYV86RXwEeECjVEznT8",
-    authDomain: "arulok-60271.firebaseapp.com",
-    projectId: "arulok-60271",
-    storageBucket: "arulok-60271.firebasestorage.app",
-    messagingSenderId: "368051209444",
-    appId: "1:368051209444:web:adf6129b596b6086add8f1",
-    measurementId: "G-Y9XY770W2F"
-  };
+        // --- !!! FONTOS: MÁSOLD BE IDE ÚJRA A SAJÁT FIREBASE CONFIGODAT! ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyCp4szmu2tUhVNSGYV86RXwEEeCjVEznT8",
+            authDomain: "arulok-60271.firebaseapp.com",
+            projectId: "arulok-60271",
+            storageBucket: "arulok-60271.firebasestorage.app",
+            messagingSenderId: "368051209444",
+            appId: "1:368051209444:web:adf6129b596b6086add8f1",
+            measurementId: "G-Y9XY770W2F"
+        };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         
         const GAME_ID = "szoba_1";
-        // A fix játékos lista
         const PREDEFINED_PLAYERS = ["Tamás", "Panni", "Zoli", "Beus", "Luca", "Alex", "Dóri", "Lujzi", "Tomi"];
         
         let myId = localStorage.getItem("arulok_player_id");
@@ -96,16 +127,11 @@
         const appDiv = document.getElementById("app");
 
         // --- AUTOMATIKUS BELÉPÉS URL ALAPJÁN ---
-        // Megnézzük, van-e "?name=X" a link végén
         const urlParams = new URLSearchParams(window.location.search);
         const nameFromUrl = urlParams.get('name');
 
-        // Ha van név az URL-ben, azonnal elmentjük és frissítjük az oldalt (paraméter nélkül)
         if (nameFromUrl && PREDEFINED_PLAYERS.includes(nameFromUrl)) {
-            // Itt egy trükk: azonnal csatlakozunk a háttérben
-            // De mivel a render ciklusban is ellenőrizzük, elég csak elindítani a join-t
             joinGame(nameFromUrl).then(() => {
-                // Kitöröljük a nevet az URL-ből, hogy szép legyen
                 window.history.replaceState({}, document.title, window.location.pathname);
             });
         }
@@ -127,10 +153,13 @@
             // 1. Állapot: Nincs belépve
             if (!myPlayer) {
                 appDiv.innerHTML = `
+                    <h1 class="logo">
+                        <img src="https://static.wikia.nocookie.net/thetraitors/images/1/1d/HU_Traitors_Logo.webp/revision/latest?cb=20231106063519" alt="Árulók logó">
+                    </h1>
                     <div class="card">
                         <h2>Üdv a Kastélyban!</h2>
                         <p>Kérlek olvasd be a QR kódodat, vagy válaszd ki a neved:</p>
-                        <select id="nameSelector" style="padding:10px; width:80%; margin-bottom:10px; background:#444; color:white; border:none;">
+                        <select id="nameSelector">
                             <option value="">-- Válassz nevet --</option>
                             ${PREDEFINED_PLAYERS.map(name => `<option value="${name}">${name}</option>`).join('')}
                         </select>
@@ -138,7 +167,6 @@
                     </div>
                 `;
                 
-                // Globálisra tesszük a gombhoz
                 window.manualJoin = () => {
                     const selectedName = document.getElementById("nameSelector").value;
                     if(selectedName) joinGame(selectedName);
@@ -148,29 +176,32 @@
 
             // 2. Állapot: LOBBY
             if (game.state === "lobby") {
-                const isAdmin = myPlayer.name === "Tomi"; // CSAK TOMI AZ ADMIN
+                const isAdmin = myPlayer.name === "Tomi";
                 const playersArray = Object.values(game.players);
 
                 let adminPanel = "";
                 if (isAdmin) {
                     adminPanel = `
-                        <div style="border-top:1px solid #555; margin-top:20px; padding-top:10px;">
+                        <div style="border-top:1px solid var(--border-color); margin-top:20px; padding-top:10px;">
                             <h3>👑 Játékmester Panel (Csak Tomi)</h3>
                             <button class="btn-admin" id="startBtn">JÁTÉK INDÍTÁSA</button>
-                            <button class="btn-qr" id="qrBtn">QR Kódok Generálása (Nyomtatáshoz)</button>
-                            <button onclick="resetGame()" style="background:#555; margin-top:10px; font-size:12px">Reset (Mindenkit kirúg)</button>
+                            <button class="btn-qr" id="qrBtn">QR Kódok Generálása</button>
+                            <button onclick="resetGame()" style="background:var(--border-color); margin-top:10px; font-size:12px; color:var(--gold-text)">Reset (Mindenkit kirúg)</button>
                         </div>
                         <div id="qr-area"></div>
                     `;
                 } else {
-                    adminPanel = `<p style="color:#888; font-size:12px;">Várjuk Tomit a játék indításához...</p>`;
+                    adminPanel = `<p style="color:var(--border-color); font-size:12px;">Várjuk Tomit a játék indításához...</p>`;
                 }
 
                 appDiv.innerHTML = `
+                    <h1 class="logo">
+                        <img src="https://static.wikia.nocookie.net/thetraitors/images/1/1d/HU_Traitors_Logo.webp/revision/latest?cb=20231106063519" alt="Árulók logó">
+                    </h1>
                     <div class="card">
                         <h2>Várakozóban...</h2>
                         <p>Szia <strong>${myPlayer.name}</strong>!</p>
-                        <hr>
+                        <hr style="border-color:var(--border-color)">
                         <ul style="text-align:left;">
                             ${playersArray.map(p => `<li>${p.name} ${p.name === myPlayer.name ? '(Te)' : '✅'}</li>`).join('')}
                         </ul>
@@ -189,27 +220,28 @@
             if (game.state === "started") {
                 const isTraitor = myPlayer.role === "traitor";
                 appDiv.innerHTML = `
+                    <h1 class="logo">
+                        <img src="https://static.wikia.nocookie.net/thetraitors/images/1/1d/HU_Traitors_Logo.webp/revision/latest?cb=20231106063519" alt="Árulók logó">
+                    </h1>
                     <div class="card">
                         <h2>A játék elkezdődött!</h2>
                         <div class="role-card ${isTraitor ? 'traitor' : 'faithful'}">
                             ${isTraitor ? '🗡️ ÁRULÓ' : '🛡️ HŰSÉGES'}
                         </div>
                         <p>${isTraitor ? 'Éjszaka gyilkolhattok.' : 'Nappal keress nyomokat!'}</p>
-                        ${myPlayer.name === "Tomi" ? '<button onclick="resetGame()" style="background:#555; margin-top:50px;">Játék vége (Reset)</button>' : ''}
+                        ${myPlayer.name === "Tomi" ? '<button onclick="resetGame()" style="background:var(--border-color); margin-top:50px; color:var(--gold-text)">Játék vége (Reset)</button>' : ''}
                     </div>
                 `;
             }
         }
 
-        // --- FÜGGVÉNYEK ---
+        // --- FÜGGVÉNYEK (Változatlan) ---
 
         async function createInitialGame() {
             await setDoc(doc(db, "games", GAME_ID), { state: "lobby", players: {} });
         }
 
         async function joinGame(name) {
-            // Ellenőrizzük, hogy valaki más nem foglalta-e már le ezt a nevet
-            // (Ez egy egyszerűsített ellenőrzés, a UI-ban később jelezhetjük)
             await updateDoc(doc(db, "games", GAME_ID), {
                 [`players.${myId}`]: { name: name, role: null, isAlive: true }
             });
@@ -220,8 +252,6 @@
             if (playerIds.length < 3) return alert("Kevés a játékos (min 3)!");
             
             playerIds.sort(() => Math.random() - 0.5);
-            
-            // Szabály: Hány áruló legyen? Pl. 20% vagy min 1.
             const traitorCount = Math.max(1, Math.floor(playerIds.length / 4));
             
             const newPlayersData = { ...game.players };
@@ -240,14 +270,10 @@
             }
         }
 
-        // --- QR KÓD GENERÁTOR ---
         function showQRCodes() {
             const qrArea = document.getElementById("qr-area");
             qrArea.innerHTML = `<div id="qr-container" style="margin-top:20px;"></div>`;
             const container = document.getElementById("qr-container");
-
-            // A jelenlegi weboldal címe (pl. te-neved.github.io/app/)
-            // Fontos: levágjuk a ? paramétereket, ha lennének
             const baseUrl = window.location.origin + window.location.pathname;
 
             PREDEFINED_PLAYERS.forEach(name => {
@@ -255,15 +281,12 @@
                 wrapper.className = "qr-item";
                 wrapper.innerHTML = `<h4>${name}</h4><div id="qr-${name}"></div>`;
                 container.appendChild(wrapper);
-
-                // QR kód generálása: URL + ?name=Név
                 new QRCode(document.getElementById(`qr-${name}`), {
                     text: `${baseUrl}?name=${encodeURIComponent(name)}`,
-                    width: 128,
-                    height: 128
+                    width: 128, height: 128,
+                    colorDark : "#000000", colorLight : "#c7b299" // QR kód színe a gombhoz igazítva
                 });
             });
-            
             alert("Kész! Görgess lejjebb a QR kódokhoz.");
         }
 
