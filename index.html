@@ -217,9 +217,25 @@
             }
 
             // 3. A gombnyomásra indul a belépés és a hang
+          // 3. A gombnyomásra indul a belépés és a hang
             document.getElementById("enter-castle-btn").addEventListener("click", () => {
+                // Biztosítjuk, hogy be van töltve
+                audio.load(); 
                 audio.volume = 1.0; 
-                audio.play().catch(e => console.log("Audio hiba:", e));
+                
+                // Megpróbáljuk lejátszani és elkapni a hibát
+                var playPromise = audio.play();
+
+                if (playPromise !== undefined) {
+                    playPromise.then(_ => {
+                        // A lejátszás sikeresen elindult!
+                        console.log("Hang indul...");
+                    })
+                    .catch(error => {
+                        // ITT A LÉNYEG: Ha hiba van, kiírjuk a képernyőre!
+                        alert("Hang hiba: " + error.name + " - " + error.message);
+                    });
+                }
                 
                 // Modal eltűnik
                 modal.style.transition = "opacity 1s ease";
@@ -231,7 +247,6 @@
                     window.history.replaceState({}, document.title, window.location.pathname);
                 });
             });
-
         } else {
             // Ha NEM QR kóddal jött (Kézi belépés):
             // A Modal rejtve marad, a sima felület jön be, ahol választhat nevet.
@@ -377,3 +392,4 @@
     </script>
 </body>
 </html>
+
