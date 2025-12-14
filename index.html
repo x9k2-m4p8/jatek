@@ -140,12 +140,12 @@
         <p style="opacity: 0.7; font-size: 0.9em;">Kapcsolódás a kastélyhoz...</p>
     </div>
 
-    <script type="module">
+   <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, onSnapshot, updateDoc, setDoc } 
         from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // --- FIREBASE CONFIG ---
+        // --- FIREBASE CONFIG (MARADT A RÉGI) ---
         const firebaseConfig = {
             apiKey: "AIzaSyCp4szmu2tUhVNSGYV86RXwEEeCjVEznT8",
             authDomain: "arulok-60271.firebaseapp.com",
@@ -160,20 +160,19 @@
         const db = getFirestore(app);
         const GAME_ID = "szoba_1";
         
-        // --- ADATOK ---
         const PREDEFINED_PLAYERS = ["Tamás", "Panni", "Zoli", "Beus", "Luca", "Alex", "Dóri", "Lujzi", "Tomi"];
         
-        // HANG FILE TÉRKÉP (Név -> Fájlnév)
+        // HANG FILE TÉRKÉP (Fontos: Pontosan így legyenek a fájlnevek!)
         const AUDIO_FILES = {
-            "Tamás": "Tamás.mp3",
-            "Panni": "Panni.mp3",
-            "Zoli":  "Zoltán.mp3",
-            "Beus":  "Beáta.mp3",
-            "Luca":  "Luca.mp3",
-            "Alex":  "Alex.mp3",
-            "Dóri":  "Dóri.mp3",
-            "Lujzi": "Lujzi.mp3",
-            "Tomi":  "Tomi.mp3"
+            "Tamás": "tamas.mp3",
+            "Panni": "panni.mp3",
+            "Zoli":  "zoli.mp3",
+            "Beus":  "beus.mp3",
+            "Luca":  "luca.mp3",
+            "Alex":  "alex.mp3",
+            "Dóri":  "dori.mp3",
+            "Lujzi": "lujzi.mp3",
+            "Tomi":  "tomi.mp3"
         };
 
         const WELCOME_MESSAGES = {
@@ -197,44 +196,68 @@
         const appDiv = document.getElementById("app");
         const logoHTML = `<h1 class="logo"><img src="https://static.wikia.nocookie.net/thetraitors/images/1/1d/HU_Traitors_Logo.webp/revision/latest?cb=20231106063519" alt="Árulók logó"></h1>`;
 
+        // --- SEGÉDFÜGGVÉNY A HANGHOZ (Hibakereséssel) ---
+        function playAudioSecurely(name) {
+            const audio = document.getElementById("castle-audio");
+            if(AUDIO_FILES[name]) {
+                audio.src = AUDIO_FILES[name];
+                audio.load(); // Kényszerített betöltés
+                
+                // Megpróbáljuk lejátszani
+                const playPromise = audio.play();
+                
+                if (playPromise !== undefined) {
+                    playPromise.then(_ => {
+                        // Automatikus lejátszás elindult
+                        console.log("Hang sikeresen elindult.");
+                    })
+                    .catch(error => {
+                        // Hiba történt (pl. nem találja a fájlt)
+                        console.log("Hang hiba:", error);
+                        // Kiírjuk a képernyőre, hogy lásd a mobilon!
+                        // Ha 404 a hiba, akkor rossz a fájlnév.
+                        // Ha "interaction" hiba, akkor a telefon tiltotta le.
+                        alert("Nem tudtam lejátszani a hangot: " + AUDIO_FILES[name] + "\n\nHibaüzenet: " + error.message);
+                    });
+                }
+            } else {
+                alert("Nincs beállítva hangfájl ehhez a névhez: " + name);
+            }
+        }
+
         // --- AUTOMATIKUS BELÉPÉS & AUDIO KEZELÉS ---
         const urlParams = new URLSearchParams(window.location.search);
         const nameFromUrl = urlParams.get('name');
 
-        // Ha QR kóddal jött (van név az URL-ben):
         if (nameFromUrl && PREDEFINED_PLAYERS.includes(nameFromUrl)) {
-            // 1. Megjelenítjük a Modalt
             const modal = document.getElementById("intro-modal");
             const welcomeName = document.getElementById("welcome-name");
-            const audio = document.getElementById("castle-audio");
             
-            modal.style.display = "flex"; // Megjelenítés
+            modal.style.display = "flex"; 
             welcomeName.innerText = `Üdvözöllek, ${nameFromUrl}`;
             
-            // 2. Beállítjuk a személyes hangot
+            // Itt előre betöltjük a fájlt, de még nem játsszuk le
+            const audio = document.getElementById("castle-audio");
             if(AUDIO_FILES[nameFromUrl]) {
                 audio.src = AUDIO_FILES[nameFromUrl];
+                audio.load();
             }
 
-            // 3. A gombnyomásra indul a belépés és a hang
             document.getElementById("enter-castle-btn").addEventListener("click", () => {
-                audio.volume = 1.0; 
-                audio.play().catch(e => console.log("Audio hiba:", e));
-                
-                // Modal eltűnik
+                // ITT INDUL A HANG A GOMBNYOMÁSRA
+                const audio = document.getElementById("castle-audio");
+                audio.play().catch(e => alert("Hiba a lejátszáskor: " + e));
+
+                // Modal animáció
                 modal.style.transition = "opacity 1s ease";
                 modal.style.opacity = "0";
                 setTimeout(() => { modal.style.display = "none"; }, 1000);
 
-                // Belépés a rendszerbe
                 joinGame(nameFromUrl).then(() => {
                     window.history.replaceState({}, document.title, window.location.pathname);
                 });
             });
 
-        } else {
-            // Ha NEM QR kóddal jött (Kézi belépés):
-            // A Modal rejtve marad, a sima felület jön be, ahol választhat nevet.
         }
 
         // --- FŐ CIKLUS ---
@@ -261,17 +284,10 @@
                     </div>
                 `;
                 
-                // KÉZI BELÉPÉS LOGIKA (Itt is kell hang!)
                 window.manualJoin = () => {
                     const selectedName = document.getElementById("nameSelector").value;
                     if(selectedName) {
-                        // Hang lejátszása azonnal
-                        const audio = document.getElementById("castle-audio");
-                        if(AUDIO_FILES[selectedName]) {
-                            audio.src = AUDIO_FILES[selectedName];
-                            audio.volume = 1.0;
-                            audio.play().catch(e => console.log(e));
-                        }
+                        playAudioSecurely(selectedName); // Használjuk a biztonságos lejátszót
                         joinGame(selectedName);
                     }
                 };
@@ -377,3 +393,4 @@
     </script>
 </body>
 </html>
+
