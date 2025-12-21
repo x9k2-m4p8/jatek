@@ -2,205 +2,283 @@
 <html lang="hu">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Árulók - Titkok a Kastélyból</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
     <style>
-        /* --- SZÍNVILÁG --- */
+        /* --- GAME UI DESIGN SYSTEM --- */
         :root {
-            --dark-bg: #0b1e22;        
-            --card-bg: rgba(26, 60, 69, 0.95);
-            --gold-text: #e0c090;      
-            --gold-button: #c7b299;    
-            --button-text: #0f2a30;    
-            --border-color: #2c5f6b;
-            --traitor-color: #ff5252;
-            --faithful-color: #69f0ae;
+            --bg-dark: #050a0c;
+            --bg-panel: rgba(18, 32, 36, 0.85);
+            --gold-primary: #d4af37;
+            --gold-shine: #f9eac3;
+            --text-main: #e0e0e0;
+            --danger: #8a1c1c;
+            --success: #1b5e20;
+            --glass-border: 1px solid rgba(212, 175, 55, 0.3);
         }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
         body {
-            background-color: var(--dark-bg);
-            color: var(--gold-text);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            text-align: center;
-            padding: 20px;
+            background: radial-gradient(circle at center, #1a2e35 0%, #000000 100%);
+            color: var(--text-main);
+            font-family: 'Lato', sans-serif;
             margin: 0;
-            overflow-x: hidden;
+            padding: 0;
             min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
         }
 
-        /* --- CINEMATIC MODAL (KÉP + HANG) --- */
-        #img-modal-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0, 0, 0, 0.95);
-            z-index: 10000;
+        /* --- LOGO & HEADER --- */
+        .header-container {
+            padding: 20px 0 10px;
+            width: 100%;
+            text-align: center;
+            z-index: 10;
+        }
+
+        .logo img {
+            max-width: 220px;
+            filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.4));
+            animation: floatLogo 4s ease-in-out infinite;
+        }
+
+        @keyframes floatLogo { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+
+        /* --- MAIN CONTAINER --- */
+        .container {
+            width: 100%;
+            max-width: 500px;
+            padding: 10px 20px 40px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- GAME CARD (GLASS PANEL) --- */
+        .game-card {
+            background: var(--bg-panel);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 2px solid rgba(212, 175, 55, 0.2);
+            border-top: 4px solid var(--gold-primary);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+            animation: cardEntrance 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+            position: relative;
+        }
+
+        @keyframes cardEntrance { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+        h2, h3 {
+            font-family: 'Cinzel', serif;
+            color: var(--gold-primary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 0;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+            text-align: center;
+        }
+
+        /* --- INPUTS --- */
+        select, input {
+            background: rgba(0,0,0,0.4);
+            border: 1px solid var(--gold-primary);
+            color: #fff;
+            padding: 15px;
+            width: 100%;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: 'Lato', sans-serif;
+            margin-bottom: 15px;
+            outline: none;
+        }
+
+        /* --- GAME BUTTONS --- */
+        button {
+            border: none;
+            outline: none;
+            cursor: pointer;
+            font-family: 'Cinzel', serif;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 8px;
+            transition: transform 0.1s, filter 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button:active { transform: scale(0.96); }
+
+        .btn-main {
+            width: 100%;
+            padding: 16px;
+            font-size: 18px;
+            color: #0d1b20;
+            background: linear-gradient(180deg, #e3c878 0%, #b08d28 100%);
+            box-shadow: 0 4px 0 #6e5614, 0 10px 20px rgba(0,0,0,0.5);
+            margin-top: 10px;
+        }
+
+        .btn-admin {
+            width: 100%;
+            padding: 12px;
+            font-size: 14px;
+            background: linear-gradient(180deg, #4a5c66 0%, #2c3e45 100%);
+            color: #ccc;
+            box-shadow: 0 3px 0 #1a2529;
+            margin-bottom: 10px;
+        }
+
+        /* --- PLAYER LIST (ROSTER) --- */
+        .roster-list {
+            list-style: none;
+            padding: 0;
+            margin: 20px 0;
+        }
+
+        .roster-item {
+            background: rgba(255,255,255,0.05);
+            margin-bottom: 8px;
+            padding: 12px 15px;
+            border-radius: 6px;
+            border-left: 3px solid transparent;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+        }
+
+        .roster-item.me {
+            background: rgba(212, 175, 55, 0.15);
+            border-left-color: var(--gold-primary);
+        }
+
+        .roster-name { font-weight: bold; font-size: 1.1em; }
+        .status-icon { font-size: 1.2em; }
+
+        /* --- PREFERENCE CARDS --- */
+        .pref-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .btn-pref {
+            height: 140px;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+            color: white;
+            text-shadow: 0 2px 5px black;
+            border: 2px solid rgba(255,255,255,0.2);
+            background-size: cover;
+            background-position: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        }
+
+        .btn-pref.traitor-opt { background-image: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('piros.png'); }
+        .btn-pref.innocent-opt { background-image: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('zold.png'); }
+        
+        .btn-pref.selected {
+            border: 3px solid #fff;
+            box-shadow: 0 0 20px var(--gold-primary);
+            transform: scale(1.03);
+        }
+
+        /* --- ROLE REVEAL --- */
+        .role-reveal-card {
+            width: 100%;
+            height: 300px;
+            border-radius: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
-            flex-direction: column;
-            
-            /* ALAPÁLLAPOT: Láthatatlan és átkattintható */
-            opacity: 0;
-            pointer-events: none; 
-            transition: opacity 1.5s ease-in-out;
+            font-family: 'Cinzel', serif;
+            font-size: 2.5em;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 5px 15px #000;
+            background-size: cover;
+            background-position: center;
+            box-shadow: inset 0 0 100px rgba(0,0,0,0.8), 0 20px 50px rgba(0,0,0,0.5);
+            border: 4px solid rgba(255,255,255,0.2);
+            animation: pulseCard 3s infinite;
         }
+        
+        .role-reveal-card.traitor { background-image: url('piros.png'); border-color: #ff5252; }
+        .role-reveal-card.faithful { background-image: url('zold.png'); border-color: #69f0ae; }
 
-        /* AKTÍV ÁLLAPOT: Látható */
-        #img-modal-overlay.active {
-            opacity: 1;
-            pointer-events: auto;
+        @keyframes pulseCard { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
+
+        /* --- MODALS (CINEMATIC) --- */
+        #img-modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 9999;
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: opacity 1.5s ease;
         }
-
+        #img-modal-overlay.active { opacity: 1; pointer-events: auto; }
         #img-modal-content {
-            max-width: 95%;
-            max-height: 85vh;
-            border: 2px solid var(--gold-button);
-            border-radius: 8px;
-            box-shadow: 0 0 60px rgba(199, 178, 153, 0.2);
-            object-fit: contain;
-            transform: scale(0.95);
-            transition: transform 10s ease;
+            max-width: 100%; max-height: 100%; object-fit: cover;
+            animation: panImage 20s linear infinite alternate;
         }
-
-        #img-modal-overlay.active #img-modal-content {
-            transform: scale(1.05); /* Lassan rázoomol */
-        }
+        @keyframes panImage { from { transform: scale(1); } to { transform: scale(1.1); } }
 
         /* --- INTRO MODAL --- */
         #intro-modal {
-            display: none;
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: #000; z-index: 9999;
-            flex-direction: column; align-items: center; justify-content: center;
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 10000; flex-direction: column; align-items: center; justify-content: center;
+            padding: 20px;
         }
+        #intro-image { max-width: 100%; max-height: 50vh; margin-bottom: 30px; box-shadow: 0 0 30px var(--gold-primary); }
 
-        #intro-image {
-            max-width: 100%; max-height: 70vh; object-fit: contain;
-            box-shadow: 0 0 50px rgba(0,0,0,0.8); margin-bottom: 20px;
-            animation: zoomIn 5s ease-out infinite alternate;
-        }
+        .pulse-text { animation: pulseText 2s infinite; font-style: italic; opacity: 0.7; font-size: 0.9em; margin-top: 10px; }
+        @keyframes pulseText { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
 
-        @keyframes zoomIn { from { transform: scale(1); } to { transform: scale(1.05); } }
-
-        /* --- KÖD HÁTTÉR --- */
-        .fog-container {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; overflow: hidden;
-            background: linear-gradient(to bottom, #051014, #0f2a30);
-        }
-        .fog-layer {
-            position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-            background: radial-gradient(circle at center, transparent 30%, #000 100%),
-                        radial-gradient(circle at 20% 80%, rgba(44, 95, 107, 0.4), transparent 40%),
-                        radial-gradient(circle at 80% 20%, rgba(15, 42, 48, 0.5), transparent 40%),
-                        radial-gradient(circle at 50% 50%, rgba(224, 192, 144, 0.05), transparent 60%);
-            background-size: 100% 100%; filter: blur(40px); opacity: 0.8;
-            animation: fogMove 25s infinite alternate ease-in-out;
-        }
-        .fog-layer-2 {
-            position: absolute; top: -30%; left: -30%; width: 160%; height: 160%;
-            background: radial-gradient(circle at 70% 70%, rgba(30, 70, 70, 0.3), transparent 50%);
-            filter: blur(60px); opacity: 0.6;
-            animation: fogMove 35s infinite alternate-reverse ease-in-out;
-        }
-        @keyframes fogMove {
-            0% { transform: translate(0, 0) rotate(0deg); }
-            50% { transform: translate(-5%, 2%) rotate(2deg); }
-            100% { transform: translate(5%, -2%) rotate(-2deg); }
-        }
-
-        /* --- UI ELEMEK --- */
-        .logo { margin-bottom: 20px; animation: fadeInUp 1s ease-out; }
-        .logo img { max-width: 300px; width: 100%; height: auto; filter: drop-shadow(0 0 10px rgba(0,0,0,0.5)); }
-        
-        .container { max-width: 600px; margin: 0 auto; position: relative; }
-        
-        .card {
-            background-color: var(--card-bg); backdrop-filter: blur(5px); padding: 20px;
-            border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); margin-bottom: 20px;
-            border: 1px solid var(--border-color); 
-            /* Fontos: Az animáció csak egyszer fusson le, ne minden rendereléskor */
-            animation: fadeInUp 0.8s ease-out both; 
-        }
-
-        input, select {
-            padding: 12px; font-size: 16px; border-radius: 6px; border: 1px solid var(--border-color);
-            width: 80%; margin-bottom: 15px; background: rgba(15, 42, 48, 0.8); color: var(--gold-text); outline: none;
-        }
-        button {
-            background: linear-gradient(135deg, var(--gold-button), #a08c70); color: var(--button-text);
-            border: none; padding: 14px 24px; font-size: 16px; border-radius: 8px; cursor: pointer;
-            width: 100%; font-weight: bold; margin-top: 10px; text-transform: uppercase; letter-spacing: 1px;
-            transition: transform 0.2s;
-        }
-        button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-        .btn-admin { background: linear-gradient(135deg, #a08c70, #5d4d38); color: #fff; margin-bottom: 15px; }
-        .btn-qr { background: linear-gradient(135deg, #2c5f6b, #1a3c45); color: #e0c090; }
-        
-        .pref-container { display: flex; flex-direction: column; gap: 15px; align-items: center; margin-bottom: 20px; }
-        
-        .btn-pref { 
-            border: 1px solid var(--border-color); color: #fff; text-shadow: 0 2px 4px #000;
-            font-size: 1.3em; padding: 20px; width: 100%; margin-top: 0;
-            background-size: cover; background-position: center;
-            opacity: 0.7; transition: all 0.3s ease;
-        }
-        
-        .btn-traitor-opt { background-image: url('piros.png'); background-color: #500; }
-        .btn-innocent-opt { background-image: url('zold.png'); background-color: #050; }
-
-        .btn-pref:hover { opacity: 1; transform: scale(1.02); }
-        .btn-pref.selected { opacity: 1; border: 3px solid #fff; box-shadow: 0 0 20px rgba(255,255,255,0.5); transform: scale(1.05); }
-
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-        
-        .role-card { 
-            font-size: 28px; padding: 60px 20px; border: 2px solid rgba(255,255,255,0.3); 
-            margin-top: 20px; border-radius: 8px; 
-            text-shadow: 0 0 10px #000; color: white; font-weight: bold;
-            background-size: cover; background-position: center;
-            animation: fadeInUp 1s ease-out 0.5s both; 
-        }
-        .role-card.traitor { background-image: url('piros.png'); background-color: var(--traitor-color); box-shadow: inset 0 0 50px rgba(0,0,0,0.5); }
-        .role-card.faithful { background-image: url('zold.png'); background-color: var(--faithful-color); box-shadow: inset 0 0 50px rgba(0,0,0,0.5); }
-
-        ul { list-style: none; padding: 0; }
-        li { padding: 12px; border-bottom: 1px solid rgba(44, 95, 107, 0.3); display: flex; justify-content: space-between; }
-        #qr-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; animation: fadeInUp 0.5s ease-out; }
-        .qr-item { background: var(--gold-button); color: var(--button-text); padding: 15px; border-radius: 8px; width: 160px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
-        .qr-item h4 { margin: 5px 0; font-size: 16px; font-weight: bold; }
-        
-        .waiting-pulse { animation: pulse 2s infinite; opacity: 0.8; font-size: 0.9em; margin-top: 20px; font-style: italic;}
-        @keyframes pulse { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
+        /* KÖD ELREJTÉSE - Game UI-hoz jobb a tiszta háttér */
+        .fog-container { display: none; }
     </style>
 </head>
 <body>
 
     <div id="img-modal-overlay">
-        <img id="img-modal-content" src="" alt="Hangulat kép">
+        <img id="img-modal-content" src="" alt="">
     </div>
 
     <div id="intro-modal">
-        <img id="intro-image" src="https://static.wikia.nocookie.net/thetraitors/images/e/e6/The_Traitors_Poster.jpg/revision/latest?cb=20230117215234" alt="Intro kép">
-        <div style="text-align: center; max-width: 80%;">
-            <h2 id="welcome-name" style="margin-bottom: 10px; color: #fff;">Üdvözöllek...</h2>
-            <p style="margin-bottom: 20px; font-style: italic; color: #ccc;">"A bizalom a legveszélyesebb játék..."</p>
-            <button id="enter-castle-btn" style="width: auto; padding: 15px 40px; font-size: 1.2em;">Belépés a Kastélyba</button>
-        </div>
+        <img id="intro-image" src="https://static.wikia.nocookie.net/thetraitors/images/e/e6/The_Traitors_Poster.jpg/revision/latest?cb=20230117215234">
+        <h2 id="welcome-name" style="color:white; margin-bottom:5px;">Üdvözöllek...</h2>
+        <p style="color:#ccc; margin-bottom:30px;">"A bizalom a legveszélyesebb játék..."</p>
+        <button class="btn-main" id="enter-castle-btn">BELÉPÉS</button>
     </div>
 
     <audio id="castle-audio"></audio>
 
-    <div class="fog-container">
-        <div class="fog-layer"></div>
-        <div class="fog-layer-2"></div>
+    <div class="header-container">
+        <div class="logo">
+            <img src="https://static.wikia.nocookie.net/thetraitors/images/1/1d/HU_Traitors_Logo.webp/revision/latest?cb=20231106063519" alt="Logo">
+        </div>
     </div>
 
     <div class="container" id="app">
-        <h1 class="logo">
-            <img src="https://static.wikia.nocookie.net/thetraitors/images/1/1d/HU_Traitors_Logo.webp/revision/latest?cb=20231106063519" alt="Árulók logó">
-        </h1>
-        <p style="opacity: 0.7; font-size: 0.9em;">Kapcsolódás a kastélyhoz...</p>
+        <p class="pulse-text" style="text-align:center;">Kapcsolódás a szerverhez...</p>
     </div>
 
     <script type="module">
@@ -208,7 +286,6 @@
         import { getFirestore, doc, onSnapshot, updateDoc, setDoc } 
         from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // --- FIREBASE CONFIG ---
         const firebaseConfig = {
             apiKey: "AIzaSyCp4szmu2tUhVNSGYV86RXwEEeCjVEznT8",
             authDomain: "arulok-60271.firebaseapp.com",
@@ -222,8 +299,6 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const GAME_ID = "szoba_1";
-        
-        // --- ADATOK ---
         const PREDEFINED_PLAYERS = ["Tamás", "Panni", "Zoli", "Beus", "Luca", "Alex", "Dóri", "Lujzi", "Tomi"];
         const AUDIO_FILES = { "Tamás": "Tamás.mp3", "Panni": "Panni.mp3", "Zoli": "Zoltán.mp3", "Beus": "Beáta.mp3", "Luca": "Luca.mp3", "Alex": "Alex.mp3", "Dóri": "Dóra.mp3", "Lujzi": "Lujzi.mp3", "Tomi": "Tomi.mp3" };
 
@@ -234,176 +309,134 @@
         }
 
         const appDiv = document.getElementById("app");
-        // Logo-t kivettem a dinamikus HTML-ből, hogy ne villogjon, az most már statikus a HTML-ben, de itt van backupnak
-        const logoHTML = `<h1 class="logo"><img src="https://static.wikia.nocookie.net/thetraitors/images/1/1d/HU_Traitors_Logo.webp/revision/latest?cb=20231106063519" alt="Árulók logó"></h1>`;
 
-        // --- HANG ÉS MODAL VEZÉRLÉS ---
-        
-        // 1. Modal bezárása (Fade out)
+        // --- CINEMATIC LOGIC ---
         window.closeCinematicModal = function() {
-            const modal = document.getElementById('img-modal-overlay');
-            modal.classList.remove('active');
+            document.getElementById('img-modal-overlay').classList.remove('active');
         }
 
-        // 2. Modal és hang indítása (Fade in)
         window.playCinematicAudio = function(audioSrc, imageSrc) {
             const modal = document.getElementById('img-modal-overlay');
             const img = document.getElementById('img-modal-content');
             const audio = document.getElementById('castle-audio');
 
             if (!audioSrc) return;
-
-            // Kép beállítása (Ha nincs kép, üres marad, de a modal nem látszik még)
             img.src = imageSrc || "";
             audio.src = audioSrc;
             audio.volume = 1.0;
-
-            modal.classList.add('active'); // Fade In
+            modal.classList.add('active');
 
             audio.play().catch(e => {
                 console.error("Audio error:", e);
-                // Ha hiba van a lejátszással, akkor is tűnjön el a modal 2mp után
                 setTimeout(() => modal.classList.remove('active'), 2000);
             });
 
-            // Ha vége a zenének, tűnjön el a modal
-            audio.onended = () => {
-                modal.classList.remove('active'); 
-            };
+            audio.onended = () => { modal.classList.remove('active'); };
         }
 
-        // --- FŐ ÁLLAPOTVÁLTÁS KEZELŐ (BUGFIX: CSAK ITT SZÓLALHAT MEG HANG!) ---
-        // Ez a függvény CSAK akkor fut le, ha a "Lobby" átvált "Intro"-ra, stb.
-        // Ha Panni választ egy szerepet, ez NEM fut le, mert a 'state' (Lobby) nem változott.
         function handleGameStateChange(newState, oldState, myPlayer) {
-            console.log(`State change: ${oldState} -> ${newState}`);
-
-            // 1. Átmenet: Bármi -> Voting (SZAVAZÁS) -> KÉP ELTÜNTETÉSE
-            if (newState === "voting") {
-                window.closeCinematicModal();
-            }
-
-            // 2. Átmenet: Lobby -> Intro -> ZENE INDÍTÁSA (Csak Tominál)
+            if (newState === "voting") window.closeCinematicModal();
             if (newState === "intro" && myPlayer && myPlayer.name === "Tomi") {
                 window.playCinematicAudio("Intro.mp3", "arpa-all.jpg");
             }
-
-            // 3. Átmenet: Voting -> Started (EREDMÉNY) -> HANGULAT KÉP + HANG?
-            // Opcionális: itt lejátszhatunk valamit, ha átlépünk az eredményre
         }
 
-        // --- URL BELÉPÉS LOGIKA ---
+        // --- INTRO ---
         const urlParams = new URLSearchParams(window.location.search);
         const nameFromUrl = urlParams.get('name');
-
         if (nameFromUrl && PREDEFINED_PLAYERS.includes(nameFromUrl)) {
             const modal = document.getElementById("intro-modal");
-            document.getElementById("welcome-name").innerText = `Üdvözöllek, ${nameFromUrl}`;
+            document.getElementById("welcome-name").innerText = `Üdv, ${nameFromUrl}`;
             modal.style.display = "flex";
             
             document.getElementById("enter-castle-btn").addEventListener("click", () => {
                 modal.style.opacity = "0";
-                setTimeout(() => { modal.style.display = "none"; }, 1000);
-
+                setTimeout(() => { modal.style.display = "none"; }, 500);
                 joinGame(nameFromUrl).then(() => {
                     window.history.replaceState({}, document.title, window.location.pathname);
-                    // Belépéskor: Csak TE hallod, helyi esemény
-                    if(AUDIO_FILES[nameFromUrl]) {
-                        window.playCinematicAudio(AUDIO_FILES[nameFromUrl], 'arpa-all.jpg');
-                    }
+                    if(AUDIO_FILES[nameFromUrl]) window.playCinematicAudio(AUDIO_FILES[nameFromUrl], 'arpa-all.jpg');
                 });
             });
         }
 
-        // --- FŐ JÁTÉK CIKLUS ---
+        // --- GAME LOOP ---
         let currentLocalState = "unknown"; 
         let introTimerRunning = false;
-        let lastRenderedHTML = ""; // Ezzel akadályozzuk meg a villogást
+        let lastRenderedHTML = ""; 
 
         onSnapshot(doc(db, "games", GAME_ID), (snapshot) => {
             if (!snapshot.exists()) { createInitialGame(); return; }
             const gameData = snapshot.data();
             const myPlayer = gameData.players[myId];
             
-            // FONTOS: Itt detektáljuk a fázisváltást a hangokhoz
             if (gameData.state !== currentLocalState) {
                 handleGameStateChange(gameData.state, currentLocalState, myPlayer);
                 currentLocalState = gameData.state;
             }
-            
-            // Renderelés (HTML frissítés)
             render(gameData);
         });
 
-        // --- RENDER (OKOS MEGJELENÍTÉS) ---
         function render(game) {
             const myPlayer = game.players[myId];
             const isAdmin = myPlayer && myPlayer.name === "Tomi";
             let newHTML = "";
 
-            // 1. BEJELENTKEZŐ KÉPERNYŐ
+            // 1. LOGIN
             if (!myPlayer) {
                 newHTML = `
-                    <div class="card">
-                        <h2>Üdv a Kastélyban!</h2>
+                    <div class="game-card">
+                        <h2>Ki vagy te?</h2>
                         <select id="nameSelector">
-                            <option value="">-- Válassz nevet --</option>
+                            <option value="">-- Válassz a listából --</option>
                             ${PREDEFINED_PLAYERS.map(name => `<option value="${name}">${name}</option>`).join('')}
                         </select>
-                        <button onclick="manualJoin()">Belépés</button>
+                        <button class="btn-main" onclick="manualJoin()">BELÉPÉS</button>
                     </div>
                 `;
-                
-                // Csak akkor frissítsük a DOM-ot, ha változott a tartalom!
-                if (appDiv.innerHTML !== newHTML) {
-                     appDiv.innerHTML = newHTML;
-                }
-                
-                // Globalis függvény, hogy a gomb elérje
+                if (appDiv.innerHTML !== newHTML) appDiv.innerHTML = newHTML;
                 window.manualJoin = () => {
-                    const selectedName = document.getElementById("nameSelector").value;
-                    if(selectedName) {
-                        joinGame(selectedName);
-                        if(AUDIO_FILES[selectedName]) {
-                            window.playCinematicAudio(AUDIO_FILES[selectedName], 'arpa-all.jpg');
-                        }
+                    const val = document.getElementById("nameSelector").value;
+                    if(val) {
+                        joinGame(val);
+                        if(AUDIO_FILES[val]) window.playCinematicAudio(AUDIO_FILES[val], 'arpa-all.jpg');
                     }
                 };
                 return;
             }
 
-            // Ha bent vagyunk, jöhet a többi fázis
             const playersArray = Object.values(game.players);
 
-            // UI: LOBBY
+            // 2. LOBBY
             if (game.state === "lobby") {
                 let adminPanel = isAdmin ? `
-                        <div style="border-top:1px solid var(--border-color); margin-top:20px; padding-top:15px;">
-                            <h3>👑 Játékmester Panel</h3>
-                            <button class="btn-admin" id="startIntroBtn">JÁTÉK INDÍTÁSA (INTRO)</button>
-                            <button class="btn-qr" id="qrBtn">QR Kódok</button>
-                            <button onclick="resetGame()" style="font-size:12px; margin-top:15px; background:transparent; border:1px solid #666;">Reset</button>
-                        </div>
-                        <div id="qr-area"></div>
-                    ` : `<p class="waiting-pulse">Várjuk Tomit...</p>`;
+                    <div style="margin-top:20px; border-top:1px solid rgba(255,255,255,0.1); padding-top:15px;">
+                        <h3 style="font-size:0.9em; margin-bottom:10px;">JÁTÉKMESTER</h3>
+                        <button class="btn-admin" id="startIntroBtn">INTRO INDÍTÁSA</button>
+                        <button class="btn-admin" id="qrBtn">QR KÓDOK</button>
+                        <button class="btn-admin" onclick="resetGame()" style="background:none; border:1px solid #666;">RESET</button>
+                    </div>
+                    <div id="qr-area"></div>
+                ` : `<p class="pulse-text">Várakozás a Játékmesterre...</p>`;
 
                 newHTML = `
-                    <div class="card">
+                    <div class="game-card">
                         <h2>${myPlayer.name}</h2>
-                        <p style="color:#e0c090; font-style:italic;">Gyülekező...</p>
-                        <ul style="text-align:left;">
-                            ${playersArray.map(p => `<li><span>${p.name}</span> <span>${p.name === myPlayer.name ? '(Te)' : '✅'}</span></li>`).join('')}
+                        <p style="text-align:center; opacity:0.6; margin-bottom:15px;">LOBBY</p>
+                        <ul class="roster-list">
+                            ${playersArray.map(p => `
+                                <li class="roster-item ${p.name === myPlayer.name ? 'me' : ''}">
+                                    <span class="roster-name">${p.name}</span>
+                                    <span class="status-icon">✅</span>
+                                </li>
+                            `).join('')}
                         </ul>
                         ${adminPanel}
                     </div>
                 `;
 
-                // Csak akkor írjuk felül a HTML-t, ha tényleg változott (pl. bejött valaki)
-                // Így a gombok nem villannak be újra meg újra
                 if (lastRenderedHTML !== newHTML) {
                     appDiv.innerHTML = newHTML;
                     lastRenderedHTML = newHTML;
-
                     if (isAdmin) {
                         document.getElementById("startIntroBtn").onclick = () => startIntroPhase();
                         document.getElementById("qrBtn").onclick = () => showQRCodes();
@@ -411,89 +444,59 @@
                 }
             }
 
-            // UI: INTRO
+            // 3. INTRO
             if (game.state === "intro") {
                 if (isAdmin && !introTimerRunning) {
                     introTimerRunning = true;
                     setTimeout(() => startVotingPhase(), 102000); 
                 }
-
-                newHTML = `
-                    <p style="opacity:0.3; margin-top:50px;">...</p>
-                    ${isAdmin ? '<p style="font-size:10px; opacity:0.3;">(Admin: Zene szól...)</p>' : ''}
-                `;
-                
-                if (lastRenderedHTML !== newHTML) {
-                    appDiv.innerHTML = newHTML;
-                    lastRenderedHTML = newHTML;
-                }
+                newHTML = `<div style="text-align:center; margin-top:50px;"><p class="pulse-text">FIGYELD A HANGOT...</p></div>`;
+                if (lastRenderedHTML !== newHTML) { appDiv.innerHTML = newHTML; lastRenderedHTML = newHTML; }
             }
 
-            // UI: VOTING
+            // 4. VOTING
             if (game.state === "voting") {
                 introTimerRunning = false;
                 
                 let prefUI = `
-                    <div style="margin: 20px 0; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px;">
-                        <p style="font-weight:bold; color:#fff;">Válassz szerepet!</p>
-                        <div class="pref-container">
-                            <button class="btn-pref btn-traitor-opt ${myPlayer.preference === 'traitor' ? 'selected' : ''}" onclick="setPreference('traitor')">🗡️ Inkább Áruló</button>
-                            <button class="btn-pref btn-innocent-opt ${myPlayer.preference === 'faithful' ? 'selected' : ''}" onclick="setPreference('faithful')">🛡️ Inkább Ártatlan</button>
+                    <div style="margin-bottom:20px;">
+                        <h3 style="margin-bottom:15px;">VÁLASSZ SZEREPET</h3>
+                        <div class="pref-grid">
+                            <button class="btn-pref traitor-opt ${myPlayer.preference === 'traitor' ? 'selected' : ''}" onclick="setPreference('traitor')">ÁRULÓ</button>
+                            <button class="btn-pref innocent-opt ${myPlayer.preference === 'faithful' ? 'selected' : ''}" onclick="setPreference('faithful')">ÁRTATLAN</button>
                         </div>
                     </div>
                 `;
 
-                let adminPanel = isAdmin ? `
-                        <div style="border-top:1px solid var(--border-color); margin-top:20px; padding-top:15px;">
-                            <h3>👑 Játékmester</h3>
-                            <button class="btn-admin" id="finalizeBtn">SORSOLÁS & EREDMÉNY</button>
-                        </div>
-                    ` : `<p class="waiting-pulse">Dönts bölcsen...</p>`;
+                let adminPanel = isAdmin ? `<button class="btn-main" id="finalizeBtn">SORSOLÁS</button>` : `<p class="pulse-text">A sorsolás hamarosan kezdődik...</p>`;
+                let list = isAdmin ? `<ul class="roster-list">${playersArray.map(p => `<li class="roster-item"><span>${p.name}</span><span>${p.preference ? '🗳️' : '...'}</span></li>`).join('')}</ul>` : '';
 
-                let list = isAdmin ? `<ul style="text-align:left;">${playersArray.map(p => `<li><span>${p.name}</span><span>${p.preference ? '🗳️' : '...'}</span></li>`).join('')}</ul>` : '';
-
-                newHTML = `
-                    <div class="card">
-                        <h2>${myPlayer.name}</h2>
-                        ${prefUI} ${list} ${adminPanel}
-                    </div>
-                `;
+                newHTML = `<div class="game-card">${prefUI} ${list} ${adminPanel}</div>`;
 
                 if (lastRenderedHTML !== newHTML) {
                     appDiv.innerHTML = newHTML;
                     lastRenderedHTML = newHTML;
-                    
                     if (isAdmin) document.getElementById("finalizeBtn").onclick = () => assignRolesAndStart(game);
                 }
-                
-                // A preference gombokat mindig újra kell kötni, ha frissült a HTML, 
-                // vagy ki kell szervezni globalba. Itt most egyszerűbb globalba tenni a setPreference-t:
-                window.setPreference = async (pref) => {
-                    await updateDoc(doc(db, "games", GAME_ID), { [`players.${myId}.preference`]: pref });
-                };
+                window.setPreference = async (pref) => { await updateDoc(doc(db, "games", GAME_ID), { [`players.${myId}.preference`]: pref }); };
             }
 
-            // UI: STARTED (EREDMÉNY)
+            // 5. STARTED
             if (game.state === "started") {
                 const isTraitor = myPlayer.role === "traitor";
-                
                 newHTML = `
-                    <div class="card" style="background:rgba(0,0,0,0.6);">
-                        <h2>A játék elkezdődött!</h2>
-                        <div class="role-card ${isTraitor ? 'traitor' : 'faithful'}">
-                            ${isTraitor ? '🗡️ ÁRULÓ' : '🛡️ ÁRTATLAN'}
+                    <div class="game-card">
+                        <h2>A SZEREPED:</h2>
+                        <div class="role-reveal-card ${isTraitor ? 'traitor' : 'faithful'}">
+                            ${isTraitor ? 'ÁRULÓ' : 'ÁRTATLAN'}
                         </div>
-                        <p style="margin-top:20px; font-style:italic;">
-                             "${isTraitor ? 'Vadászd le őket...' : 'Bízz senkiben...'}"
+                        <p style="text-align:center; margin-top:20px; opacity:0.8; font-style:italic;">
+                            "${isTraitor ? 'Gyilkolj az éj leple alatt...' : 'Keress, kutass, ne bízz senkiben!'}"
                         </p>
-                        ${myPlayer.name === "Tomi" ? '<button onclick="resetGame()" style="background:transparent; border:1px solid #666; font-size:12px; margin-top:20px;">Játék vége</button>' : ''}
+                        ${myPlayer.name === "Tomi" ? '<button class="btn-admin" onclick="resetGame()" style="margin-top:30px;">VÉGE (RESET)</button>' : ''}
                     </div>
                 `;
-                
-                if (lastRenderedHTML !== newHTML) {
-                    appDiv.innerHTML = newHTML;
-                    lastRenderedHTML = newHTML;
-                }
+                if (lastRenderedHTML !== newHTML) { appDiv.innerHTML = newHTML; lastRenderedHTML = newHTML; }
             }
         }
 
@@ -501,60 +504,33 @@
         async function joinGame(name) { await updateDoc(doc(db, "games", GAME_ID), { [`players.${myId}`]: { name: name, role: null, preference: null, isAlive: true } }); }
         async function startIntroPhase() { await updateDoc(doc(db, "games", GAME_ID), { state: "intro" }); }
         async function startVotingPhase() { await updateDoc(doc(db, "games", GAME_ID), { state: "voting" }); }
-
         async function assignRolesAndStart(game) {
             const playerIds = Object.keys(game.players);
             if (playerIds.length < 3) return alert("Kevés a játékos (min 3)!");
-            
             let wannabeTraitors = playerIds.filter(id => game.players[id].preference === 'traitor');
             let others = playerIds.filter(id => game.players[id].preference !== 'traitor'); 
             let selectedTraitors = [];
-
             if (wannabeTraitors.length === 2) selectedTraitors = wannabeTraitors;
-            else if (wannabeTraitors.length === 1) {
-                selectedTraitors.push(wannabeTraitors[0]);
-                selectedTraitors.push(others[Math.floor(Math.random() * others.length)]);
-            } else if (wannabeTraitors.length > 2) {
-                wannabeTraitors.sort(() => Math.random() - 0.5); 
-                selectedTraitors = wannabeTraitors.slice(0, 2);
-            } else {
-                let allPlayers = [...playerIds];
-                allPlayers.sort(() => Math.random() - 0.5);
-                selectedTraitors = allPlayers.slice(0, 2);
-            }
-
+            else if (wannabeTraitors.length === 1) { selectedTraitors.push(wannabeTraitors[0]); selectedTraitors.push(others[Math.floor(Math.random() * others.length)]); }
+            else if (wannabeTraitors.length > 2) { wannabeTraitors.sort(() => Math.random() - 0.5); selectedTraitors = wannabeTraitors.slice(0, 2); }
+            else { let allPlayers = [...playerIds]; allPlayers.sort(() => Math.random() - 0.5); selectedTraitors = allPlayers.slice(0, 2); }
             const newPlayersData = { ...game.players };
-            playerIds.forEach(id => {
-                newPlayersData[id].role = selectedTraitors.includes(id) ? "traitor" : "faithful";
-            });
-
+            playerIds.forEach(id => { newPlayersData[id].role = selectedTraitors.includes(id) ? "traitor" : "faithful"; });
             await updateDoc(doc(db, "games", GAME_ID), { players: newPlayersData, state: "started" });
         }
-
-        window.resetGame = async function() {
-            if(confirm("Biztos?")) {
-                await setDoc(doc(db, "games", GAME_ID), { state: "lobby", players: {} });
-                localStorage.removeItem("arulok_player_id");
-                location.reload();
-            }
-        }
-
+        window.resetGame = async function() { if(confirm("Biztos?")) { await setDoc(doc(db, "games", GAME_ID), { state: "lobby", players: {} }); localStorage.removeItem("arulok_player_id"); location.reload(); } }
         function showQRCodes() {
             const qrArea = document.getElementById("qr-area");
-            qrArea.innerHTML = `<div id="qr-container" style="margin-top:20px;"></div>`;
+            qrArea.innerHTML = `<div id="qr-container" style="display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin-top:20px;"></div>`;
             const container = document.getElementById("qr-container");
             const baseUrl = window.location.origin + window.location.pathname;
             PREDEFINED_PLAYERS.forEach(name => {
                 const wrapper = document.createElement("div");
-                wrapper.className = "qr-item";
-                wrapper.innerHTML = `<h4>${name}</h4><div id="qr-${name}"></div>`;
+                wrapper.innerHTML = `<div style="background:#fff; padding:10px; border-radius:5px;"><div id="qr-${name}"></div><div style="color:#000; text-align:center; font-weight:bold;">${name}</div></div>`;
                 container.appendChild(wrapper);
-                new QRCode(document.getElementById(`qr-${name}`), {
-                    text: `${baseUrl}?name=${encodeURIComponent(name)}`,
-                    width: 128, height: 128, colorDark : "#0f2a30", colorLight : "#c7b299"
-                });
+                new QRCode(document.getElementById(`qr-${name}`), { text: `${baseUrl}?name=${encodeURIComponent(name)}`, width: 100, height: 100 });
             });
-            setTimeout(() => { window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }); }, 500);
+            setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }), 500);
         }
     </script>
 </body>
