@@ -15,13 +15,14 @@
         /* --- GAME UI DESIGN SYSTEM --- */
         :root {
             --bg-dark: #050a0c;
-            --bg-panel: rgba(18, 32, 36, 0.85);
+            --bg-panel: rgba(18, 32, 36, 0.95);
             --gold-primary: #d4af37;
             --gold-shine: #f9eac3;
             --text-main: #e0e0e0;
             --danger: #8a1c1c;
             --success: #1b5e20;
             --glass-border: 1px solid rgba(212, 175, 55, 0.3);
+            --nav-height: 70px;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -37,230 +38,146 @@
             flex-direction: column;
             align-items: center;
             overflow-x: hidden;
+            padding-bottom: var(--nav-height); /* Hely a menünek */
         }
 
-        /* --- LOGO & HEADER --- */
-        .header-container {
-            padding: 20px 0 10px;
-            width: 100%;
-            text-align: center;
-            z-index: 10;
-        }
-
-        .logo img {
-            max-width: 220px;
-            filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.4));
-            animation: floatLogo 4s ease-in-out infinite;
-        }
-
-        @keyframes floatLogo { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+        /* --- HEADER --- */
+        .header-container { padding: 20px 0 10px; width: 100%; text-align: center; z-index: 10; }
+        .logo img { max-width: 180px; filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.4)); }
 
         /* --- MAIN CONTAINER --- */
         .container {
-            width: 100%;
-            max-width: 500px;
-            padding: 10px 20px 40px;
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
+            width: 100%; max-width: 500px; padding: 10px 20px 20px;
+            flex-grow: 1; display: flex; flex-direction: column;
         }
 
-        /* --- GAME CARD (GLASS PANEL) --- */
+        /* --- GAME CARD --- */
         .game-card {
             background: var(--bg-panel);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 2px solid rgba(212, 175, 55, 0.2);
-            border-top: 4px solid var(--gold-primary);
-            border-radius: 16px;
-            padding: 25px;
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 2px solid rgba(212, 175, 55, 0.2); border-top: 4px solid var(--gold-primary);
+            border-radius: 16px; padding: 25px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.6);
-            animation: cardEntrance 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
-            position: relative;
+            animation: cardEntrance 0.5s ease-out;
+            margin-bottom: 20px;
         }
+        @keyframes cardEntrance { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        @keyframes cardEntrance { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        h2, h3 { font-family: 'Cinzel', serif; color: var(--gold-primary); text-transform: uppercase; margin-top: 0; text-align: center; }
 
-        h2, h3 {
-            font-family: 'Cinzel', serif;
-            color: var(--gold-primary);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-top: 0;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
-            text-align: center;
-        }
-
-        /* --- INPUTS --- */
+        /* --- UI ELEMENTS --- */
         select, input {
-            background: rgba(0,0,0,0.4);
-            border: 1px solid var(--gold-primary);
-            color: #fff;
-            padding: 15px;
-            width: 100%;
-            border-radius: 8px;
-            font-size: 16px;
-            font-family: 'Lato', sans-serif;
-            margin-bottom: 15px;
-            outline: none;
+            background: rgba(0,0,0,0.4); border: 1px solid var(--gold-primary); color: #fff;
+            padding: 15px; width: 100%; border-radius: 8px; font-size: 16px; margin-bottom: 15px; outline: none;
         }
 
-        /* --- GAME BUTTONS --- */
         button {
-            border: none;
-            outline: none;
-            cursor: pointer;
-            font-family: 'Cinzel', serif;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            border-radius: 8px;
-            transition: transform 0.1s, filter 0.2s;
+            border: none; outline: none; cursor: pointer; font-family: 'Cinzel', serif; font-weight: 700;
+            text-transform: uppercase; border-radius: 8px; transition: transform 0.1s; width: 100%;
+        }
+        button:active { transform: scale(0.96); }
+
+        .btn-main {
+            padding: 16px; font-size: 18px; color: #0d1b20;
+            background: linear-gradient(180deg, #e3c878 0%, #b08d28 100%);
+            box-shadow: 0 4px 0 #6e5614; margin-top: 10px;
+        }
+        .btn-admin {
+            padding: 12px; font-size: 14px; background: linear-gradient(180deg, #4a5c66 0%, #2c3e45 100%);
+            color: #ccc; box-shadow: 0 3px 0 #1a2529; margin-bottom: 10px;
+        }
+
+        /* --- TREASURY (KINCSTÁR) STYLES --- */
+        .voucher-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border-left: 5px solid #555;
             position: relative;
             overflow: hidden;
         }
 
-        button:active { transform: scale(0.96); }
+        .voucher-card::before {
+            content: ''; position: absolute; top:0; left:0; width:100%; height:100%;
+            background: linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.05) 50%, transparent 60%);
+            animation: shine 3s infinite;
+        }
+        @keyframes shine { 0% { transform: translateX(-150%); } 100% { transform: translateX(150%); } }
 
-        .btn-main {
-            width: 100%;
-            padding: 16px;
-            font-size: 18px;
-            color: #0d1b20;
-            background: linear-gradient(180deg, #e3c878 0%, #b08d28 100%);
-            box-shadow: 0 4px 0 #6e5614, 0 10px 20px rgba(0,0,0,0.5);
-            margin-top: 10px;
+        .voucher-card.obi { border-color: #fe7c00; }
+        .voucher-card.ikea { border-color: #0051ba; }
+
+        .voucher-title { font-size: 1.5em; font-weight: bold; margin-bottom: 5px; font-family: 'Cinzel', serif; }
+        .voucher-card.obi .voucher-title { color: #fe7c00; }
+        .voucher-card.ikea .voucher-title { color: #ffda1a; text-shadow: 0 0 2px #0051ba; }
+
+        .voucher-amount { font-size: 2em; font-weight: bold; color: #fff; margin: 10px 0; }
+        .voucher-desc { font-size: 0.9em; opacity: 0.7; font-style: italic; }
+
+        /* --- BOTTOM NAVIGATION --- */
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%; height: var(--nav-height);
+            background: #0b1416; border-top: 2px solid var(--gold-primary);
+            display: flex; justify-content: space-around; align-items: center;
+            z-index: 100; box-shadow: 0 -5px 20px rgba(0,0,0,0.8);
         }
 
-        .btn-admin {
-            width: 100%;
-            padding: 12px;
-            font-size: 14px;
-            background: linear-gradient(180deg, #4a5c66 0%, #2c3e45 100%);
-            color: #ccc;
-            box-shadow: 0 3px 0 #1a2529;
-            margin-bottom: 10px;
+        .nav-item {
+            background: none; box-shadow: none; color: #666;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            font-size: 0.7em; gap: 5px; padding: 5px;
         }
 
-        /* --- PLAYER LIST (ROSTER) --- */
-        .roster-list {
-            list-style: none;
-            padding: 0;
-            margin: 20px 0;
-        }
+        .nav-item.active { color: var(--gold-primary); text-shadow: 0 0 10px rgba(212, 175, 55, 0.5); }
+        .nav-icon { font-size: 1.8em; }
 
+        /* --- ROSTER & PREFS --- */
+        .roster-list { list-style: none; padding: 0; margin: 20px 0; }
         .roster-item {
-            background: rgba(255,255,255,0.05);
-            margin-bottom: 8px;
-            padding: 12px 15px;
-            border-radius: 6px;
-            border-left: 3px solid transparent;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: all 0.3s;
+            background: rgba(255,255,255,0.05); margin-bottom: 8px; padding: 12px 15px;
+            border-radius: 6px; display: flex; justify-content: space-between; align-items: center;
         }
+        .roster-item.me { background: rgba(212, 175, 55, 0.15); border-left: 3px solid var(--gold-primary); }
 
-        .roster-item.me {
-            background: rgba(212, 175, 55, 0.15);
-            border-left-color: var(--gold-primary);
-        }
-
-        .roster-name { font-weight: bold; font-size: 1.1em; }
-        .status-icon { font-size: 1.2em; }
-
-        /* --- PREFERENCE CARDS --- */
-        .pref-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin: 20px 0;
-        }
-
+        .pref-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
         .btn-pref {
-            height: 140px;
-            border-radius: 12px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2em;
-            color: white;
-            text-shadow: 0 2px 5px black;
-            border: 2px solid rgba(255,255,255,0.2);
-            background-size: cover;
-            background-position: center;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            height: 140px; border-radius: 12px; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; font-size: 1.2em; color: white;
+            border: 2px solid rgba(255,255,255,0.2); background-size: cover;
         }
-
+        .btn-pref.selected { border: 3px solid #fff; box-shadow: 0 0 20px var(--gold-primary); transform: scale(1.03); }
         .btn-pref.traitor-opt { background-image: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('piros.png'); }
         .btn-pref.innocent-opt { background-image: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('zold.png'); }
-        
-        .btn-pref.selected {
-            border: 3px solid #fff;
-            box-shadow: 0 0 20px var(--gold-primary);
-            transform: scale(1.03);
-        }
 
-        /* --- ROLE REVEAL --- */
         .role-reveal-card {
-            width: 100%;
-            height: 300px;
-            border-radius: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: 'Cinzel', serif;
-            font-size: 2.5em;
-            font-weight: 900;
-            color: #fff;
-            text-shadow: 0 5px 15px #000;
-            background-size: cover;
-            background-position: center;
-            box-shadow: inset 0 0 100px rgba(0,0,0,0.8), 0 20px 50px rgba(0,0,0,0.5);
-            border: 4px solid rgba(255,255,255,0.2);
-            animation: pulseCard 3s infinite;
+            width: 100%; height: 300px; border-radius: 16px; display: flex; align-items: center; justify-content: center;
+            font-family: 'Cinzel', serif; font-size: 2.5em; font-weight: 900; color: #fff;
+            border: 4px solid rgba(255,255,255,0.2); background-size: cover;
         }
-        
         .role-reveal-card.traitor { background-image: url('piros.png'); border-color: #ff5252; }
         .role-reveal-card.faithful { background-image: url('zold.png'); border-color: #69f0ae; }
 
-        @keyframes pulseCard { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
-
-        /* --- MODALS (CINEMATIC) --- */
-        #img-modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; z-index: 9999;
-            display: flex; align-items: center; justify-content: center;
-            opacity: 0; pointer-events: none; transition: opacity 1.5s ease;
-        }
+        /* --- MODALS --- */
+        #img-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 1.5s ease; }
         #img-modal-overlay.active { opacity: 1; pointer-events: auto; }
-        #img-modal-content {
-            max-width: 100%; max-height: 100%; object-fit: cover;
-            animation: panImage 20s linear infinite alternate;
-        }
+        #img-modal-content { max-width: 100%; max-height: 100%; object-fit: cover; animation: panImage 20s linear infinite alternate; }
         @keyframes panImage { from { transform: scale(1); } to { transform: scale(1.1); } }
-
-        /* --- INTRO MODAL --- */
-        #intro-modal {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; z-index: 10000; flex-direction: column; align-items: center; justify-content: center;
-            padding: 20px;
-        }
-        #intro-image { max-width: 100%; max-height: 50vh; margin-bottom: 30px; box-shadow: 0 0 30px var(--gold-primary); }
-
+        
+        #intro-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 10000; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+        #intro-image { max-width: 100%; max-height: 50vh; margin-bottom: 30px; }
         .pulse-text { animation: pulseText 2s infinite; font-style: italic; opacity: 0.7; font-size: 0.9em; margin-top: 10px; }
         @keyframes pulseText { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
 
-        /* KÖD ELREJTÉSE - Game UI-hoz jobb a tiszta háttér */
         .fog-container { display: none; }
     </style>
 </head>
 <body>
 
-    <div id="img-modal-overlay">
-        <img id="img-modal-content" src="" alt="">
-    </div>
+    <div id="img-modal-overlay"><img id="img-modal-content" src="" alt=""></div>
 
     <div id="intro-modal">
         <img id="intro-image" src="https://static.wikia.nocookie.net/thetraitors/images/e/e6/The_Traitors_Poster.jpg/revision/latest?cb=20230117215234">
@@ -278,7 +195,7 @@
     </div>
 
     <div class="container" id="app">
-        <p class="pulse-text" style="text-align:center;">Kapcsolódás a szerverhez...</p>
+        <p class="pulse-text" style="text-align:center;">Kapcsolódás...</p>
     </div>
 
     <script type="module">
@@ -309,57 +226,41 @@
         }
 
         const appDiv = document.getElementById("app");
+        
+        // VIEW STATE (Melyik menü aktív?)
+        let currentView = 'game'; // 'game' or 'treasury'
 
-        // --- CINEMATIC LOGIC ---
-        window.closeCinematicModal = function() {
-            document.getElementById('img-modal-overlay').classList.remove('active');
+        // --- GLOBAL FUNCTIONS ---
+        window.switchView = function(viewName) {
+            currentView = viewName;
+            // Azonnali renderelés kérése (az onSnapshot úgyis meghívja a rendert, de ez gyorsabb UI reakciót ad)
+            // Itt most csak a UI-t frissítjük a következő render ciklusig
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(el => el.classList.remove('active'));
+            const activeBtn = document.querySelector(`.nav-item[onclick="switchView('${viewName}')"]`);
+            if(activeBtn) activeBtn.classList.add('active');
+            
+            // Trigger a re-render by forcing update (hacky but works with the existing flow)
+            // A legtisztább, ha hagyjuk, hogy a snapshot frissítsen, vagy meghívjuk a rendert az utolsó ismert adattal.
+            // Mivel a `game` objektumot nem tároljuk globálisan, várnunk kell a következő snapshotra vagy tárolni kell.
+            // Egyszerűsítés: tároljuk az utolsó game adatot.
+            if(window.lastGameData) render(window.lastGameData);
         }
 
-        window.playCinematicAudio = function(audioSrc, imageSrc) {
+        window.closeCinematicModal = () => document.getElementById('img-modal-overlay').classList.remove('active');
+        window.playCinematicAudio = (audioSrc, imageSrc) => {
             const modal = document.getElementById('img-modal-overlay');
             const img = document.getElementById('img-modal-content');
             const audio = document.getElementById('castle-audio');
-
             if (!audioSrc) return;
             img.src = imageSrc || "";
-            audio.src = audioSrc;
-            audio.volume = 1.0;
+            audio.src = audioSrc; audio.volume = 1.0;
             modal.classList.add('active');
-
-            audio.play().catch(e => {
-                console.error("Audio error:", e);
-                setTimeout(() => modal.classList.remove('active'), 2000);
-            });
-
-            audio.onended = () => { modal.classList.remove('active'); };
+            audio.play().catch(e => setTimeout(() => modal.classList.remove('active'), 2000));
+            audio.onended = () => modal.classList.remove('active');
         }
 
-        function handleGameStateChange(newState, oldState, myPlayer) {
-            if (newState === "voting") window.closeCinematicModal();
-            if (newState === "intro" && myPlayer && myPlayer.name === "Tomi") {
-                window.playCinematicAudio("Intro.mp3", "arpa-all.jpg");
-            }
-        }
-
-        // --- INTRO ---
-        const urlParams = new URLSearchParams(window.location.search);
-        const nameFromUrl = urlParams.get('name');
-        if (nameFromUrl && PREDEFINED_PLAYERS.includes(nameFromUrl)) {
-            const modal = document.getElementById("intro-modal");
-            document.getElementById("welcome-name").innerText = `Üdv, ${nameFromUrl}`;
-            modal.style.display = "flex";
-            
-            document.getElementById("enter-castle-btn").addEventListener("click", () => {
-                modal.style.opacity = "0";
-                setTimeout(() => { modal.style.display = "none"; }, 500);
-                joinGame(nameFromUrl).then(() => {
-                    window.history.replaceState({}, document.title, window.location.pathname);
-                    if(AUDIO_FILES[nameFromUrl]) window.playCinematicAudio(AUDIO_FILES[nameFromUrl], 'arpa-all.jpg');
-                });
-            });
-        }
-
-        // --- GAME LOOP ---
+        // --- GAME LOGIC ---
         let currentLocalState = "unknown"; 
         let introTimerRunning = false;
         let lastRenderedHTML = ""; 
@@ -367,10 +268,12 @@
         onSnapshot(doc(db, "games", GAME_ID), (snapshot) => {
             if (!snapshot.exists()) { createInitialGame(); return; }
             const gameData = snapshot.data();
+            window.lastGameData = gameData; // Tároljuk a nézetváltáshoz
             const myPlayer = gameData.players[myId];
             
             if (gameData.state !== currentLocalState) {
-                handleGameStateChange(gameData.state, currentLocalState, myPlayer);
+                if (gameData.state === "voting") window.closeCinematicModal();
+                if (gameData.state === "intro" && myPlayer && myPlayer.name === "Tomi") window.playCinematicAudio("Intro.mp3", "arpa-all.jpg");
                 currentLocalState = gameData.state;
             }
             render(gameData);
@@ -379,11 +282,15 @@
         function render(game) {
             const myPlayer = game.players[myId];
             const isAdmin = myPlayer && myPlayer.name === "Tomi";
-            let newHTML = "";
+            
+            // KINCSTÁR ADATOK (Ha még nincs az adatbázisban, alapértelmezett értékek)
+            const treasury = game.treasury || { obi: 5000, ikea: 5000 };
 
-            // 1. LOGIN
+            let mainContent = "";
+
+            // 1. LOGIN (Nincs menü)
             if (!myPlayer) {
-                newHTML = `
+                mainContent = `
                     <div class="game-card">
                         <h2>Ki vagy te?</h2>
                         <select id="nameSelector">
@@ -393,7 +300,7 @@
                         <button class="btn-main" onclick="manualJoin()">BELÉPÉS</button>
                     </div>
                 `;
-                if (appDiv.innerHTML !== newHTML) appDiv.innerHTML = newHTML;
+                appDiv.innerHTML = mainContent;
                 window.manualJoin = () => {
                     const val = document.getElementById("nameSelector").value;
                     if(val) {
@@ -404,9 +311,50 @@
                 return;
             }
 
-            const playersArray = Object.values(game.players);
+            // --- BOTTOM NAVIGATION (Csak ha bent vagyunk) ---
+            const navHTML = `
+                <div class="bottom-nav">
+                    <button class="nav-item ${currentView === 'game' ? 'active' : ''}" onclick="switchView('game')">
+                        <span class="nav-icon">🏰</span>
+                        <span>Játék</span>
+                    </button>
+                    <button class="nav-item ${currentView === 'treasury' ? 'active' : ''}" onclick="switchView('treasury')">
+                        <span class="nav-icon">💰</span>
+                        <span>Kincstár</span>
+                    </button>
+                </div>
+            `;
 
-            // 2. LOBBY
+            // --- VIEW: TREASURY ---
+            if (currentView === 'treasury') {
+                mainContent = `
+                    <div class="game-card">
+                        <h2>Kincstár</h2>
+                        <p style="text-align:center; opacity:0.7; margin-bottom:20px;">A kastély nyereményalapja</p>
+                        
+                        <div class="voucher-card obi">
+                            <div class="voucher-title">OBI</div>
+                            <div class="voucher-desc">Tamás fix nyereménye</div>
+                            <div class="voucher-amount">${treasury.obi} Ft</div>
+                        </div>
+
+                        <div class="voucher-card ikea">
+                            <div class="voucher-title">IKEA</div>
+                            <div class="voucher-desc">A győztesek alapja</div>
+                            <div class="voucher-amount">${treasury.ikea} Ft</div>
+                        </div>
+                    </div>
+                    ${navHTML}
+                `;
+                // Treasury esetén mindig renderelünk, egyszerűbb, mint a diffelés
+                appDiv.innerHTML = mainContent;
+                return;
+            }
+
+            // --- VIEW: GAME (A korábbi logika) ---
+            const playersArray = Object.values(game.players);
+            let gameContent = "";
+
             if (game.state === "lobby") {
                 let adminPanel = isAdmin ? `
                     <div style="margin-top:20px; border-top:1px solid rgba(255,255,255,0.1); padding-top:15px;">
@@ -418,46 +366,19 @@
                     <div id="qr-area"></div>
                 ` : `<p class="pulse-text">Várakozás a Játékmesterre...</p>`;
 
-                newHTML = `
+                gameContent = `
                     <div class="game-card">
                         <h2>${myPlayer.name}</h2>
                         <p style="text-align:center; opacity:0.6; margin-bottom:15px;">LOBBY</p>
                         <ul class="roster-list">
-                            ${playersArray.map(p => `
-                                <li class="roster-item ${p.name === myPlayer.name ? 'me' : ''}">
-                                    <span class="roster-name">${p.name}</span>
-                                    <span class="status-icon">✅</span>
-                                </li>
-                            `).join('')}
+                            ${playersArray.map(p => `<li class="roster-item ${p.name === myPlayer.name ? 'me' : ''}"><span class="roster-name">${p.name}</span><span class="status-icon">✅</span></li>`).join('')}
                         </ul>
                         ${adminPanel}
                     </div>
                 `;
-
-                if (lastRenderedHTML !== newHTML) {
-                    appDiv.innerHTML = newHTML;
-                    lastRenderedHTML = newHTML;
-                    if (isAdmin) {
-                        document.getElementById("startIntroBtn").onclick = () => startIntroPhase();
-                        document.getElementById("qrBtn").onclick = () => showQRCodes();
-                    }
-                }
-            }
-
-            // 3. INTRO
-            if (game.state === "intro") {
-                if (isAdmin && !introTimerRunning) {
-                    introTimerRunning = true;
-                    setTimeout(() => startVotingPhase(), 102000); 
-                }
-                newHTML = `<div style="text-align:center; margin-top:50px;"><p class="pulse-text">FIGYELD A HANGOT...</p></div>`;
-                if (lastRenderedHTML !== newHTML) { appDiv.innerHTML = newHTML; lastRenderedHTML = newHTML; }
-            }
-
-            // 4. VOTING
-            if (game.state === "voting") {
-                introTimerRunning = false;
-                
+            } else if (game.state === "intro") {
+                 gameContent = `<div style="text-align:center; margin-top:50px;"><p class="pulse-text">FIGYELD A HANGOT...</p></div>`;
+            } else if (game.state === "voting") {
                 let prefUI = `
                     <div style="margin-bottom:20px;">
                         <h3 style="margin-bottom:15px;">VÁLASSZ SZEREPET</h3>
@@ -467,40 +388,51 @@
                         </div>
                     </div>
                 `;
-
                 let adminPanel = isAdmin ? `<button class="btn-main" id="finalizeBtn">SORSOLÁS</button>` : `<p class="pulse-text">A sorsolás hamarosan kezdődik...</p>`;
                 let list = isAdmin ? `<ul class="roster-list">${playersArray.map(p => `<li class="roster-item"><span>${p.name}</span><span>${p.preference ? '🗳️' : '...'}</span></li>`).join('')}</ul>` : '';
-
-                newHTML = `<div class="game-card">${prefUI} ${list} ${adminPanel}</div>`;
-
-                if (lastRenderedHTML !== newHTML) {
-                    appDiv.innerHTML = newHTML;
-                    lastRenderedHTML = newHTML;
-                    if (isAdmin) document.getElementById("finalizeBtn").onclick = () => assignRolesAndStart(game);
-                }
-                window.setPreference = async (pref) => { await updateDoc(doc(db, "games", GAME_ID), { [`players.${myId}.preference`]: pref }); };
-            }
-
-            // 5. STARTED
-            if (game.state === "started") {
+                gameContent = `<div class="game-card">${prefUI} ${list} ${adminPanel}</div>`;
+            } else if (game.state === "started") {
                 const isTraitor = myPlayer.role === "traitor";
-                newHTML = `
+                gameContent = `
                     <div class="game-card">
                         <h2>A SZEREPED:</h2>
-                        <div class="role-reveal-card ${isTraitor ? 'traitor' : 'faithful'}">
-                            ${isTraitor ? 'ÁRULÓ' : 'ÁRTATLAN'}
-                        </div>
-                        <p style="text-align:center; margin-top:20px; opacity:0.8; font-style:italic;">
-                            "${isTraitor ? 'Gyilkolj az éj leple alatt...' : 'Keress, kutass, ne bízz senkiben!'}"
-                        </p>
+                        <div class="role-reveal-card ${isTraitor ? 'traitor' : 'faithful'}">${isTraitor ? 'ÁRULÓ' : 'ÁRTATLAN'}</div>
+                        <p style="text-align:center; margin-top:20px; opacity:0.8; font-style:italic;">"${isTraitor ? 'Gyilkolj az éj leple alatt...' : 'Keress, kutass, ne bízz senkiben!'}"</p>
                         ${myPlayer.name === "Tomi" ? '<button class="btn-admin" onclick="resetGame()" style="margin-top:30px;">VÉGE (RESET)</button>' : ''}
                     </div>
                 `;
-                if (lastRenderedHTML !== newHTML) { appDiv.innerHTML = newHTML; lastRenderedHTML = newHTML; }
             }
+
+            mainContent = gameContent + navHTML;
+
+            // Render Diffing (csak a Game nézetben)
+            if (lastRenderedHTML !== mainContent) {
+                appDiv.innerHTML = mainContent;
+                lastRenderedHTML = mainContent;
+
+                // Event Listeners Re-attach
+                if (game.state === "lobby" && isAdmin) {
+                    const startBtn = document.getElementById("startIntroBtn");
+                    if(startBtn) startBtn.onclick = () => startIntroPhase();
+                    const qrBtn = document.getElementById("qrBtn");
+                    if(qrBtn) qrBtn.onclick = () => showQRCodes();
+                }
+                if (game.state === "voting" && isAdmin) {
+                     const finBtn = document.getElementById("finalizeBtn");
+                     if(finBtn) finBtn.onclick = () => assignRolesAndStart(game);
+                }
+            }
+            // Preference mindig kell
+             window.setPreference = async (pref) => { await updateDoc(doc(db, "games", GAME_ID), { [`players.${myId}.preference`]: pref }); };
         }
 
-        async function createInitialGame() { await setDoc(doc(db, "games", GAME_ID), { state: "lobby", players: {} }); }
+        async function createInitialGame() { 
+            await setDoc(doc(db, "games", GAME_ID), { 
+                state: "lobby", 
+                players: {},
+                treasury: { obi: 5000, ikea: 5000 } // INITIAL TREASURY
+            }); 
+        }
         async function joinGame(name) { await updateDoc(doc(db, "games", GAME_ID), { [`players.${myId}`]: { name: name, role: null, preference: null, isAlive: true } }); }
         async function startIntroPhase() { await updateDoc(doc(db, "games", GAME_ID), { state: "intro" }); }
         async function startVotingPhase() { await updateDoc(doc(db, "games", GAME_ID), { state: "voting" }); }
@@ -518,7 +450,8 @@
             playerIds.forEach(id => { newPlayersData[id].role = selectedTraitors.includes(id) ? "traitor" : "faithful"; });
             await updateDoc(doc(db, "games", GAME_ID), { players: newPlayersData, state: "started" });
         }
-        window.resetGame = async function() { if(confirm("Biztos?")) { await setDoc(doc(db, "games", GAME_ID), { state: "lobby", players: {} }); localStorage.removeItem("arulok_player_id"); location.reload(); } }
+        window.resetGame = async function() { if(confirm("Biztos?")) { await setDoc(doc(db, "games", GAME_ID), { state: "lobby", players: {}, treasury: { obi: 5000, ikea: 5000 } }); localStorage.removeItem("arulok_player_id"); location.reload(); } }
+        
         function showQRCodes() {
             const qrArea = document.getElementById("qr-area");
             qrArea.innerHTML = `<div id="qr-container" style="display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin-top:20px;"></div>`;
@@ -531,6 +464,23 @@
                 new QRCode(document.getElementById(`qr-${name}`), { text: `${baseUrl}?name=${encodeURIComponent(name)}`, width: 100, height: 100 });
             });
             setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }), 500);
+        }
+
+        // INTRO HANDLING
+        const urlParams = new URLSearchParams(window.location.search);
+        const nameFromUrl = urlParams.get('name');
+        if (nameFromUrl && PREDEFINED_PLAYERS.includes(nameFromUrl)) {
+            const modal = document.getElementById("intro-modal");
+            document.getElementById("welcome-name").innerText = `Üdv, ${nameFromUrl}`;
+            modal.style.display = "flex";
+            document.getElementById("enter-castle-btn").addEventListener("click", () => {
+                modal.style.opacity = "0";
+                setTimeout(() => { modal.style.display = "none"; }, 500);
+                joinGame(nameFromUrl).then(() => {
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                    if(AUDIO_FILES[nameFromUrl]) window.playCinematicAudio(AUDIO_FILES[nameFromUrl], 'arpa-all.jpg');
+                });
+            });
         }
     </script>
 </body>
