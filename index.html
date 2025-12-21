@@ -22,7 +22,6 @@
             --danger: #8a1c1c;
             --success: #1b5e20;
             --glass-border: 1px solid rgba(212, 175, 55, 0.3);
-            --nav-height: 70px;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -38,7 +37,6 @@
             flex-direction: column;
             align-items: center;
             overflow-x: hidden;
-            padding-bottom: var(--nav-height); /* Hely a menünek */
         }
 
         /* --- HEADER --- */
@@ -47,8 +45,8 @@
 
         /* --- MAIN CONTAINER --- */
         .container {
-            width: 100%; max-width: 500px; padding: 10px 20px 20px;
-            flex-grow: 1; display: flex; flex-direction: column;
+            width: 100%; max-width: 500px; padding: 10px 20px 40px;
+            flex-grow: 1; display: flex; flex-direction: column; align-items: center;
         }
 
         /* --- GAME CARD --- */
@@ -60,6 +58,7 @@
             box-shadow: 0 10px 40px rgba(0,0,0,0.6);
             animation: cardEntrance 0.5s ease-out;
             margin-bottom: 20px;
+            width: 100%;
         }
         @keyframes cardEntrance { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -85,6 +84,35 @@
         .btn-admin {
             padding: 12px; font-size: 14px; background: linear-gradient(180deg, #4a5c66 0%, #2c3e45 100%);
             color: #ccc; box-shadow: 0 3px 0 #1a2529; margin-bottom: 10px;
+        }
+
+        /* --- CLASSIC MENU BUTTONS (CENTERED) --- */
+        .menu-row {
+            display: flex;
+            gap: 15px;
+            width: 100%;
+            margin-top: 10px;
+            justify-content: center;
+            animation: cardEntrance 0.8s ease-out;
+        }
+
+        .btn-menu {
+            flex: 1;
+            padding: 20px;
+            font-size: 1.1em;
+            background: rgba(0,0,0,0.6);
+            border: 1px solid var(--gold-primary);
+            color: var(--gold-primary);
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            transition: all 0.3s ease;
+        }
+
+        .btn-menu.active {
+            background: var(--gold-primary);
+            color: #000;
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+            transform: scale(1.05);
+            font-weight: 900;
         }
 
         /* --- TREASURY (KINCSTÁR) STYLES --- */
@@ -118,22 +146,6 @@
         .voucher-amount { font-size: 2em; font-weight: bold; color: #fff; margin: 10px 0; }
         .voucher-desc { font-size: 0.9em; opacity: 0.7; font-style: italic; }
 
-        /* --- BOTTOM NAVIGATION --- */
-        .bottom-nav {
-            position: fixed; bottom: 0; left: 0; width: 100%; height: var(--nav-height);
-            background: #0b1416; border-top: 2px solid var(--gold-primary);
-            display: flex; justify-content: space-around; align-items: center;
-            z-index: 100; box-shadow: 0 -5px 20px rgba(0,0,0,0.8);
-        }
-
-        .nav-item {
-            background: none; box-shadow: none; color: #666;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            font-size: 0.7em; gap: 5px; padding: 5px;
-        }
-
-        .nav-item.active { color: var(--gold-primary); text-shadow: 0 0 10px rgba(212, 175, 55, 0.5); }
-        .nav-icon { font-size: 1.8em; }
 
         /* --- ROSTER & PREFS --- */
         .roster-list { list-style: none; padding: 0; margin: 20px 0; }
@@ -227,23 +239,12 @@
 
         const appDiv = document.getElementById("app");
         
-        // VIEW STATE (Melyik menü aktív?)
+        // VIEW STATE
         let currentView = 'game'; // 'game' or 'treasury'
 
         // --- GLOBAL FUNCTIONS ---
         window.switchView = function(viewName) {
             currentView = viewName;
-            // Azonnali renderelés kérése (az onSnapshot úgyis meghívja a rendert, de ez gyorsabb UI reakciót ad)
-            // Itt most csak a UI-t frissítjük a következő render ciklusig
-            const navItems = document.querySelectorAll('.nav-item');
-            navItems.forEach(el => el.classList.remove('active'));
-            const activeBtn = document.querySelector(`.nav-item[onclick="switchView('${viewName}')"]`);
-            if(activeBtn) activeBtn.classList.add('active');
-            
-            // Trigger a re-render by forcing update (hacky but works with the existing flow)
-            // A legtisztább, ha hagyjuk, hogy a snapshot frissítsen, vagy meghívjuk a rendert az utolsó ismert adattal.
-            // Mivel a `game` objektumot nem tároljuk globálisan, várnunk kell a következő snapshotra vagy tárolni kell.
-            // Egyszerűsítés: tároljuk az utolsó game adatot.
             if(window.lastGameData) render(window.lastGameData);
         }
 
@@ -268,7 +269,7 @@
         onSnapshot(doc(db, "games", GAME_ID), (snapshot) => {
             if (!snapshot.exists()) { createInitialGame(); return; }
             const gameData = snapshot.data();
-            window.lastGameData = gameData; // Tároljuk a nézetváltáshoz
+            window.lastGameData = gameData;
             const myPlayer = gameData.players[myId];
             
             if (gameData.state !== currentLocalState) {
@@ -282,15 +283,11 @@
         function render(game) {
             const myPlayer = game.players[myId];
             const isAdmin = myPlayer && myPlayer.name === "Tomi";
-            
-            // KINCSTÁR ADATOK (Ha még nincs az adatbázisban, alapértelmezett értékek)
             const treasury = game.treasury || { obi: 5000, ikea: 5000 };
 
-            let mainContent = "";
-
-            // 1. LOGIN (Nincs menü)
+            // 1. LOGIN
             if (!myPlayer) {
-                mainContent = `
+                let loginHTML = `
                     <div class="game-card">
                         <h2>Ki vagy te?</h2>
                         <select id="nameSelector">
@@ -300,7 +297,8 @@
                         <button class="btn-main" onclick="manualJoin()">BELÉPÉS</button>
                     </div>
                 `;
-                appDiv.innerHTML = mainContent;
+                if(appDiv.innerHTML !== loginHTML) appDiv.innerHTML = loginHTML;
+                
                 window.manualJoin = () => {
                     const val = document.getElementById("nameSelector").value;
                     if(val) {
@@ -311,50 +309,12 @@
                 return;
             }
 
-            // --- BOTTOM NAVIGATION (Csak ha bent vagyunk) ---
-            const navHTML = `
-                <div class="bottom-nav">
-                    <button class="nav-item ${currentView === 'game' ? 'active' : ''}" onclick="switchView('game')">
-                        <span class="nav-icon">🏰</span>
-                        <span>Játék</span>
-                    </button>
-                    <button class="nav-item ${currentView === 'treasury' ? 'active' : ''}" onclick="switchView('treasury')">
-                        <span class="nav-icon">💰</span>
-                        <span>Kincstár</span>
-                    </button>
-                </div>
-            `;
-
-            // --- VIEW: TREASURY ---
-            if (currentView === 'treasury') {
-                mainContent = `
-                    <div class="game-card">
-                        <h2>Kincstár</h2>
-                        <p style="text-align:center; opacity:0.7; margin-bottom:20px;">A kastély nyereményalapja</p>
-                        
-                        <div class="voucher-card obi">
-                            <div class="voucher-title">OBI</div>
-                            <div class="voucher-desc">Tamás fix nyereménye</div>
-                            <div class="voucher-amount">${treasury.obi} Ft</div>
-                        </div>
-
-                        <div class="voucher-card ikea">
-                            <div class="voucher-title">IKEA</div>
-                            <div class="voucher-desc">A győztesek alapja</div>
-                            <div class="voucher-amount">${treasury.ikea} Ft</div>
-                        </div>
-                    </div>
-                    ${navHTML}
-                `;
-                // Treasury esetén mindig renderelünk, egyszerűbb, mint a diffelés
-                appDiv.innerHTML = mainContent;
-                return;
-            }
-
-            // --- VIEW: GAME (A korábbi logika) ---
             const playersArray = Object.values(game.players);
-            let gameContent = "";
+            let contentHTML = "";
 
+            // --- FÁZISOK ---
+
+            // A) LOBBY
             if (game.state === "lobby") {
                 let adminPanel = isAdmin ? `
                     <div style="margin-top:20px; border-top:1px solid rgba(255,255,255,0.1); padding-top:15px;">
@@ -366,7 +326,7 @@
                     <div id="qr-area"></div>
                 ` : `<p class="pulse-text">Várakozás a Játékmesterre...</p>`;
 
-                gameContent = `
+                contentHTML = `
                     <div class="game-card">
                         <h2>${myPlayer.name}</h2>
                         <p style="text-align:center; opacity:0.6; margin-bottom:15px;">LOBBY</p>
@@ -376,9 +336,13 @@
                         ${adminPanel}
                     </div>
                 `;
-            } else if (game.state === "intro") {
-                 gameContent = `<div style="text-align:center; margin-top:50px;"><p class="pulse-text">FIGYELD A HANGOT...</p></div>`;
-            } else if (game.state === "voting") {
+            } 
+            // B) INTRO
+            else if (game.state === "intro") {
+                 contentHTML = `<div style="text-align:center; margin-top:50px;"><p class="pulse-text">FIGYELD A HANGOT...</p></div>`;
+            } 
+            // C) VOTING
+            else if (game.state === "voting") {
                 let prefUI = `
                     <div style="margin-bottom:20px;">
                         <h3 style="margin-bottom:15px;">VÁLASSZ SZEREPET</h3>
@@ -390,25 +354,63 @@
                 `;
                 let adminPanel = isAdmin ? `<button class="btn-main" id="finalizeBtn">SORSOLÁS</button>` : `<p class="pulse-text">A sorsolás hamarosan kezdődik...</p>`;
                 let list = isAdmin ? `<ul class="roster-list">${playersArray.map(p => `<li class="roster-item"><span>${p.name}</span><span>${p.preference ? '🗳️' : '...'}</span></li>`).join('')}</ul>` : '';
-                gameContent = `<div class="game-card">${prefUI} ${list} ${adminPanel}</div>`;
-            } else if (game.state === "started") {
-                const isTraitor = myPlayer.role === "traitor";
-                gameContent = `
-                    <div class="game-card">
-                        <h2>A SZEREPED:</h2>
-                        <div class="role-reveal-card ${isTraitor ? 'traitor' : 'faithful'}">${isTraitor ? 'ÁRULÓ' : 'ÁRTATLAN'}</div>
-                        <p style="text-align:center; margin-top:20px; opacity:0.8; font-style:italic;">"${isTraitor ? 'Gyilkolj az éj leple alatt...' : 'Keress, kutass, ne bízz senkiben!'}"</p>
-                        ${myPlayer.name === "Tomi" ? '<button class="btn-admin" onclick="resetGame()" style="margin-top:30px;">VÉGE (RESET)</button>' : ''}
+                contentHTML = `<div class="game-card">${prefUI} ${list} ${adminPanel}</div>`;
+            } 
+            // D) STARTED (MENÜ ITT JELENIK MEG!)
+            else if (game.state === "started") {
+                
+                // 1. MENÜ GOMBOK HTML
+                const menuHTML = `
+                    <div class="menu-row">
+                        <button class="btn-menu ${currentView === 'game' ? 'active' : ''}" onclick="switchView('game')">SZEREPEM</button>
+                        <button class="btn-menu ${currentView === 'treasury' ? 'active' : ''}" onclick="switchView('treasury')">KINCSTÁR</button>
                     </div>
                 `;
+
+                // 2. TARTALOM A NÉZET ALAPJÁN
+                let innerContent = "";
+                
+                if (currentView === 'treasury') {
+                    // KINCSTÁR NÉZET
+                    innerContent = `
+                        <div class="game-card">
+                            <h2>Kincstár</h2>
+                            <p style="text-align:center; opacity:0.7; margin-bottom:20px;">A kastély nyereményalapja</p>
+                            
+                            <div class="voucher-card obi">
+                                <div class="voucher-title">OBI</div>
+                                <div class="voucher-desc">Tamás fix nyereménye</div>
+                                <div class="voucher-amount">${treasury.obi} Ft</div>
+                            </div>
+
+                            <div class="voucher-card ikea">
+                                <div class="voucher-title">IKEA</div>
+                                <div class="voucher-desc">A győztesek alapja</div>
+                                <div class="voucher-amount">${treasury.ikea} Ft</div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // JÁTÉK (SZEREP) NÉZET (Default)
+                    const isTraitor = myPlayer.role === "traitor";
+                    innerContent = `
+                        <div class="game-card">
+                            <h2>A SZEREPED:</h2>
+                            <div class="role-reveal-card ${isTraitor ? 'traitor' : 'faithful'}">${isTraitor ? 'ÁRULÓ' : 'ÁRTATLAN'}</div>
+                            <p style="text-align:center; margin-top:20px; opacity:0.8; font-style:italic;">"${isTraitor ? 'Gyilkolj az éj leple alatt...' : 'Keress, kutass, ne bízz senkiben!'}"</p>
+                            ${myPlayer.name === "Tomi" ? '<button class="btn-admin" onclick="resetGame()" style="margin-top:30px;">VÉGE (RESET)</button>' : ''}
+                        </div>
+                    `;
+                }
+
+                // 3. ÖSSZEÁLLÍTÁS
+                contentHTML = innerContent + menuHTML;
             }
 
-            mainContent = gameContent + navHTML;
-
-            // Render Diffing (csak a Game nézetben)
-            if (lastRenderedHTML !== mainContent) {
-                appDiv.innerHTML = mainContent;
-                lastRenderedHTML = mainContent;
+            // Render Diffing
+            if (lastRenderedHTML !== contentHTML) {
+                appDiv.innerHTML = contentHTML;
+                lastRenderedHTML = contentHTML;
 
                 // Event Listeners Re-attach
                 if (game.state === "lobby" && isAdmin) {
@@ -422,7 +424,6 @@
                      if(finBtn) finBtn.onclick = () => assignRolesAndStart(game);
                 }
             }
-            // Preference mindig kell
              window.setPreference = async (pref) => { await updateDoc(doc(db, "games", GAME_ID), { [`players.${myId}.preference`]: pref }); };
         }
 
@@ -430,7 +431,7 @@
             await setDoc(doc(db, "games", GAME_ID), { 
                 state: "lobby", 
                 players: {},
-                treasury: { obi: 5000, ikea: 5000 } // INITIAL TREASURY
+                treasury: { obi: 5000, ikea: 5000 }
             }); 
         }
         async function joinGame(name) { await updateDoc(doc(db, "games", GAME_ID), { [`players.${myId}`]: { name: name, role: null, preference: null, isAlive: true } }); }
@@ -466,7 +467,6 @@
             setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }), 500);
         }
 
-        // INTRO HANDLING
         const urlParams = new URLSearchParams(window.location.search);
         const nameFromUrl = urlParams.get('name');
         if (nameFromUrl && PREDEFINED_PLAYERS.includes(nameFromUrl)) {
