@@ -29,7 +29,7 @@
             min-height: 100vh;
         }
 
-        /* --- CINEMATIC MODAL (HANGHOZ KÖTÖTT) --- */
+        /* --- CINEMATIC MODAL (KÉP + HANG) --- */
         #img-modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -40,12 +40,13 @@
             justify-content: center;
             flex-direction: column;
             
-            /* FADE EFFECT */
+            /* ALAPÁLLAPOT: Láthatatlan és átkattintható */
             opacity: 0;
             pointer-events: none; 
             transition: opacity 1.5s ease-in-out;
         }
 
+        /* AKTÍV ÁLLAPOT: Látható */
         #img-modal-overlay.active {
             opacity: 1;
             pointer-events: auto;
@@ -63,7 +64,7 @@
         }
 
         #img-modal-overlay.active #img-modal-content {
-            transform: scale(1.05);
+            transform: scale(1.05); /* Lassan rázoomol */
         }
 
         /* --- INTRO MODAL --- */
@@ -108,14 +109,20 @@
             100% { transform: translate(5%, -2%) rotate(-2deg); }
         }
 
+        /* --- UI ELEMEK --- */
         .logo { margin-bottom: 20px; animation: fadeInUp 1s ease-out; }
         .logo img { max-width: 300px; width: 100%; height: auto; filter: drop-shadow(0 0 10px rgba(0,0,0,0.5)); }
+        
         .container { max-width: 600px; margin: 0 auto; position: relative; }
+        
         .card {
             background-color: var(--card-bg); backdrop-filter: blur(5px); padding: 20px;
             border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); margin-bottom: 20px;
-            border: 1px solid var(--border-color); animation: fadeInUp 0.8s ease-out both; animation-delay: 0.2s;
+            border: 1px solid var(--border-color); 
+            /* Fontos: Az animáció csak egyszer fusson le, ne minden rendereléskor */
+            animation: fadeInUp 0.8s ease-out both; 
         }
+
         input, select {
             padding: 12px; font-size: 16px; border-radius: 6px; border: 1px solid var(--border-color);
             width: 80%; margin-bottom: 15px; background: rgba(15, 42, 48, 0.8); color: var(--gold-text); outline: none;
@@ -227,20 +234,18 @@
         }
 
         const appDiv = document.getElementById("app");
+        // Logo-t kivettem a dinamikus HTML-ből, hogy ne villogjon, az most már statikus a HTML-ben, de itt van backupnak
         const logoHTML = `<h1 class="logo"><img src="https://static.wikia.nocookie.net/thetraitors/images/1/1d/HU_Traitors_Logo.webp/revision/latest?cb=20231106063519" alt="Árulók logó"></h1>`;
 
-        // --- AUDIO & MODAL CONTROLLER (BUGFIX: CSAK ITT KEZELJÜK A HANGOT) ---
+        // --- HANG ÉS MODAL VEZÉRLÉS ---
         
-        // Modal bezárása (Fade out)
+        // 1. Modal bezárása (Fade out)
         window.closeCinematicModal = function() {
             const modal = document.getElementById('img-modal-overlay');
             modal.classList.remove('active');
-            // Opcionális: Hang elhalkítása, ha akarjuk, hogy elvágja
-             // const audio = document.getElementById('castle-audio');
-             // audio.pause();
         }
 
-        // Modal és hang indítása (Fade in)
+        // 2. Modal és hang indítása (Fade in)
         window.playCinematicAudio = function(audioSrc, imageSrc) {
             const modal = document.getElementById('img-modal-overlay');
             const img = document.getElementById('img-modal-content');
@@ -248,7 +253,8 @@
 
             if (!audioSrc) return;
 
-            img.src = imageSrc;
+            // Kép beállítása (Ha nincs kép, üres marad, de a modal nem látszik még)
+            img.src = imageSrc || "";
             audio.src = audioSrc;
             audio.volume = 1.0;
 
@@ -256,33 +262,37 @@
 
             audio.play().catch(e => {
                 console.error("Audio error:", e);
+                // Ha hiba van a lejátszással, akkor is tűnjön el a modal 2mp után
                 setTimeout(() => modal.classList.remove('active'), 2000);
             });
 
+            // Ha vége a zenének, tűnjön el a modal
             audio.onended = () => {
-                modal.classList.remove('active'); // Fade Out ha vége
+                modal.classList.remove('active'); 
             };
         }
 
-        // --- STATE CHANGE HANDLER (EZ JAVÍTJA A SZINKRON HIBÁT) ---
-        // Ez a függvény CSAK akkor fut le, ha a Játék Fázis (game.state) megváltozik.
-        // Nem fut le, ha csak egy játékos adata változik.
+        // --- FŐ ÁLLAPOTVÁLTÁS KEZELŐ (BUGFIX: CSAK ITT SZÓLALHAT MEG HANG!) ---
+        // Ez a függvény CSAK akkor fut le, ha a "Lobby" átvált "Intro"-ra, stb.
+        // Ha Panni választ egy szerepet, ez NEM fut le, mert a 'state' (Lobby) nem változott.
         function handleGameStateChange(newState, oldState, myPlayer) {
             console.log(`State change: ${oldState} -> ${newState}`);
 
-            // 1. Átmenet: Bármi -> Voting (SZAVAZÁS)
-            // Itt kötelezően eltüntetjük a képet mindenkinél!
+            // 1. Átmenet: Bármi -> Voting (SZAVAZÁS) -> KÉP ELTÜNTETÉSE
             if (newState === "voting") {
                 window.closeCinematicModal();
             }
 
-            // 2. Átmenet: Lobby -> Intro (Csak Adminnál indít zenét)
+            // 2. Átmenet: Lobby -> Intro -> ZENE INDÍTÁSA (Csak Tominál)
             if (newState === "intro" && myPlayer && myPlayer.name === "Tomi") {
                 window.playCinematicAudio("Intro.mp3", "arpa-all.jpg");
             }
+
+            // 3. Átmenet: Voting -> Started (EREDMÉNY) -> HANGULAT KÉP + HANG?
+            // Opcionális: itt lejátszhatunk valamit, ha átlépünk az eredményre
         }
 
-        // --- INITIAL JOIN LOGIC ---
+        // --- URL BELÉPÉS LOGIKA ---
         const urlParams = new URLSearchParams(window.location.search);
         const nameFromUrl = urlParams.get('name');
 
@@ -305,33 +315,35 @@
             });
         }
 
-        // --- MAIN GAME LOOP ---
+        // --- FŐ JÁTÉK CIKLUS ---
         let currentLocalState = "unknown"; 
         let introTimerRunning = false;
+        let lastRenderedHTML = ""; // Ezzel akadályozzuk meg a villogást
 
         onSnapshot(doc(db, "games", GAME_ID), (snapshot) => {
             if (!snapshot.exists()) { createInitialGame(); return; }
             const gameData = snapshot.data();
             const myPlayer = gameData.players[myId];
             
-            // FONTOS: Itt detektáljuk a fázisváltást
+            // FONTOS: Itt detektáljuk a fázisváltást a hangokhoz
             if (gameData.state !== currentLocalState) {
                 handleGameStateChange(gameData.state, currentLocalState, myPlayer);
                 currentLocalState = gameData.state;
             }
             
-            // A renderelés független az effektektől
+            // Renderelés (HTML frissítés)
             render(gameData);
         });
 
-        // --- RENDER (CSAK HTML FRISSÍTÉS, SEMMI HANG!) ---
+        // --- RENDER (OKOS MEGJELENÍTÉS) ---
         function render(game) {
             const myPlayer = game.players[myId];
             const isAdmin = myPlayer && myPlayer.name === "Tomi";
+            let newHTML = "";
 
+            // 1. BEJELENTKEZŐ KÉPERNYŐ
             if (!myPlayer) {
-                appDiv.innerHTML = `
-                    ${logoHTML}
+                newHTML = `
                     <div class="card">
                         <h2>Üdv a Kastélyban!</h2>
                         <select id="nameSelector">
@@ -341,11 +353,17 @@
                         <button onclick="manualJoin()">Belépés</button>
                     </div>
                 `;
+                
+                // Csak akkor frissítsük a DOM-ot, ha változott a tartalom!
+                if (appDiv.innerHTML !== newHTML) {
+                     appDiv.innerHTML = newHTML;
+                }
+                
+                // Globalis függvény, hogy a gomb elérje
                 window.manualJoin = () => {
                     const selectedName = document.getElementById("nameSelector").value;
                     if(selectedName) {
                         joinGame(selectedName);
-                        // Kézi belépés: Helyi esemény
                         if(AUDIO_FILES[selectedName]) {
                             window.playCinematicAudio(AUDIO_FILES[selectedName], 'arpa-all.jpg');
                         }
@@ -354,6 +372,7 @@
                 return;
             }
 
+            // Ha bent vagyunk, jöhet a többi fázis
             const playersArray = Object.values(game.players);
 
             // UI: LOBBY
@@ -368,8 +387,7 @@
                         <div id="qr-area"></div>
                     ` : `<p class="waiting-pulse">Várjuk Tomit...</p>`;
 
-                appDiv.innerHTML = `
-                    ${logoHTML}
+                newHTML = `
                     <div class="card">
                         <h2>${myPlayer.name}</h2>
                         <p style="color:#e0c090; font-style:italic;">Gyülekező...</p>
@@ -380,9 +398,16 @@
                     </div>
                 `;
 
-                if (isAdmin) {
-                    document.getElementById("startIntroBtn").onclick = () => startIntroPhase();
-                    document.getElementById("qrBtn").onclick = () => showQRCodes();
+                // Csak akkor írjuk felül a HTML-t, ha tényleg változott (pl. bejött valaki)
+                // Így a gombok nem villannak be újra meg újra
+                if (lastRenderedHTML !== newHTML) {
+                    appDiv.innerHTML = newHTML;
+                    lastRenderedHTML = newHTML;
+
+                    if (isAdmin) {
+                        document.getElementById("startIntroBtn").onclick = () => startIntroPhase();
+                        document.getElementById("qrBtn").onclick = () => showQRCodes();
+                    }
                 }
             }
 
@@ -393,18 +418,20 @@
                     setTimeout(() => startVotingPhase(), 102000); 
                 }
 
-                appDiv.innerHTML = `
-                    ${logoHTML}
+                newHTML = `
                     <p style="opacity:0.3; margin-top:50px;">...</p>
                     ${isAdmin ? '<p style="font-size:10px; opacity:0.3;">(Admin: Zene szól...)</p>' : ''}
                 `;
+                
+                if (lastRenderedHTML !== newHTML) {
+                    appDiv.innerHTML = newHTML;
+                    lastRenderedHTML = newHTML;
+                }
             }
 
             // UI: VOTING
             if (game.state === "voting") {
                 introTimerRunning = false;
-                
-                // ITT NINCS playCinematicAudio HÍVÁS!
                 
                 let prefUI = `
                     <div style="margin: 20px 0; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px;">
@@ -425,32 +452,32 @@
 
                 let list = isAdmin ? `<ul style="text-align:left;">${playersArray.map(p => `<li><span>${p.name}</span><span>${p.preference ? '🗳️' : '...'}</span></li>`).join('')}</ul>` : '';
 
-                appDiv.innerHTML = `
-                    ${logoHTML}
+                newHTML = `
                     <div class="card">
                         <h2>${myPlayer.name}</h2>
                         ${prefUI} ${list} ${adminPanel}
                     </div>
                 `;
 
+                if (lastRenderedHTML !== newHTML) {
+                    appDiv.innerHTML = newHTML;
+                    lastRenderedHTML = newHTML;
+                    
+                    if (isAdmin) document.getElementById("finalizeBtn").onclick = () => assignRolesAndStart(game);
+                }
+                
+                // A preference gombokat mindig újra kell kötni, ha frissült a HTML, 
+                // vagy ki kell szervezni globalba. Itt most egyszerűbb globalba tenni a setPreference-t:
                 window.setPreference = async (pref) => {
                     await updateDoc(doc(db, "games", GAME_ID), { [`players.${myId}.preference`]: pref });
                 };
-                if (isAdmin) document.getElementById("finalizeBtn").onclick = () => assignRolesAndStart(game);
             }
 
             // UI: STARTED (EREDMÉNY)
             if (game.state === "started") {
                 const isTraitor = myPlayer.role === "traitor";
                 
-                // Ellenőrizzük, hogy mutattuk-e már az eredmény képet ebben a fázisban
-                // Ez egy trükk: ha még nem futott le az audio, elindítjuk, de csak egyszer
-                // A handleGameStateChange nem tudja a szerepet, mert akkor még nincs meg a local adat, ezért itt kezeljük óvatosan.
-                // DE a legjobb, ha a render-ben CSAK a statikus képet mutatjuk, nem a modalt.
-                // VAGY: A modal itt is beugorhat egyszer.
-                
-                appDiv.innerHTML = `
-                    ${logoHTML}
+                newHTML = `
                     <div class="card" style="background:rgba(0,0,0,0.6);">
                         <h2>A játék elkezdődött!</h2>
                         <div class="role-card ${isTraitor ? 'traitor' : 'faithful'}">
@@ -462,6 +489,11 @@
                         ${myPlayer.name === "Tomi" ? '<button onclick="resetGame()" style="background:transparent; border:1px solid #666; font-size:12px; margin-top:20px;">Játék vége</button>' : ''}
                     </div>
                 `;
+                
+                if (lastRenderedHTML !== newHTML) {
+                    appDiv.innerHTML = newHTML;
+                    lastRenderedHTML = newHTML;
+                }
             }
         }
 
