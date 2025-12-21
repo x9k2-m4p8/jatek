@@ -85,6 +85,16 @@
             padding: 12px; font-size: 14px; background: linear-gradient(180deg, #4a5c66 0%, #2c3e45 100%);
             color: #ccc; box-shadow: 0 3px 0 #1a2529; margin-bottom: 10px;
         }
+        
+        /* Gomb a zene átugrásához */
+        .btn-skip {
+            margin-top: 20px;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.8em;
+            padding: 10px;
+        }
 
         /* --- CLASSIC MENU BUTTONS (CENTERED) --- */
         .menu-row {
@@ -337,12 +347,28 @@
                     </div>
                 `;
             } 
-            // B) INTRO
+            // B) INTRO (JAVÍTVA: IDŐZÍTŐ VISSZATÉVE)
             else if (game.state === "intro") {
-                 contentHTML = `<div style="text-align:center; margin-top:50px;"><p class="pulse-text">FIGYELD A HANGOT...</p></div>`;
+                 
+                 // Automatikus továbblépés (Timer) - CSAK ADMINNÁL, hogy ne legyen duplikált írás
+                 if (isAdmin && !introTimerRunning) {
+                    introTimerRunning = true;
+                    setTimeout(() => startVotingPhase(), 102000); // 1 perc 42 mp
+                 }
+
+                 let skipBtn = isAdmin ? `<button class="btn-skip" id="skipBtn">UGRÁS A SZAVAZÁSRA ⏩</button>` : '';
+
+                 contentHTML = `
+                    <div style="text-align:center; margin-top:50px;">
+                        <p class="pulse-text">FIGYELD A HANGOT...</p>
+                        ${skipBtn}
+                    </div>
+                 `;
             } 
             // C) VOTING
             else if (game.state === "voting") {
+                introTimerRunning = false; // Reset timer flag
+                
                 let prefUI = `
                     <div style="margin-bottom:20px;">
                         <h3 style="margin-bottom:15px;">VÁLASSZ SZEREPET</h3>
@@ -418,6 +444,10 @@
                     if(startBtn) startBtn.onclick = () => startIntroPhase();
                     const qrBtn = document.getElementById("qrBtn");
                     if(qrBtn) qrBtn.onclick = () => showQRCodes();
+                }
+                if (game.state === "intro" && isAdmin) {
+                    const skipBtn = document.getElementById("skipBtn");
+                    if(skipBtn) skipBtn.onclick = () => startVotingPhase();
                 }
                 if (game.state === "voting" && isAdmin) {
                      const finBtn = document.getElementById("finalizeBtn");
