@@ -29,41 +29,46 @@
             min-height: 100vh;
         }
 
-        /* --- KÉP MODAL (POPUP) --- */
+        /* --- CINEMATIC MODAL (HANGHOZ KÖTÖTT) --- */
         #img-modal-overlay {
-            display: none; /* Alapból rejtve */
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0, 0, 0, 0.85); /* Sötét háttér */
+            background-color: rgba(0, 0, 0, 0.95); /* Majdnem teljesen fekete */
             z-index: 10000;
+            display: flex;
             align-items: center;
             justify-content: center;
             flex-direction: column;
-            animation: fadeIn 0.5s ease-out;
-            cursor: pointer;
+            
+            /* FADE EFFECT */
+            opacity: 0;
+            pointer-events: none; /* Át lehet kattintani rajta, ha láthatatlan */
+            transition: opacity 1.5s ease-in-out; /* 1.5 másodperces áttűnés */
+        }
+
+        /* Amikor aktív, láthatóvá válik */
+        #img-modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
         }
 
         #img-modal-content {
-            max-width: 90%;
-            max-height: 80vh;
-            border: 4px solid var(--gold-button);
-            border-radius: 12px;
-            box-shadow: 0 0 50px rgba(0,0,0,0.9);
+            max-width: 95%;
+            max-height: 85vh;
+            border: 2px solid var(--gold-button);
+            border-radius: 8px;
+            box-shadow: 0 0 60px rgba(199, 178, 153, 0.2);
             object-fit: contain;
-            animation: zoomInModal 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            /* Enyhe zoom effekt, amikor megjelenik */
+            transform: scale(0.95);
+            transition: transform 10s ease;
         }
 
-        #img-modal-text {
-            margin-top: 15px;
-            color: white;
-            font-style: italic;
-            opacity: 0.8;
-            font-size: 0.9em;
+        #img-modal-overlay.active #img-modal-content {
+            transform: scale(1.05); /* Lassan rázoomol a képre */
         }
 
-        @keyframes zoomInModal { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-
-        /* --- INTRO MODAL --- */
+        /* --- INTRO MODAL (Kezdő képernyő) --- */
         #intro-modal {
             display: none;
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -189,9 +194,8 @@
 </head>
 <body>
 
-    <div id="img-modal-overlay" onclick="closeImageModal()">
+    <div id="img-modal-overlay">
         <img id="img-modal-content" src="" alt="Hangulat kép">
-        <div id="img-modal-text">(Kattints bárhova a bezáráshoz)</div>
     </div>
 
     <div id="intro-modal">
@@ -262,56 +266,62 @@
         const appDiv = document.getElementById("app");
         const logoHTML = `<h1 class="logo"><img src="https://static.wikia.nocookie.net/thetraitors/images/1/1d/HU_Traitors_Logo.webp/revision/latest?cb=20231106063519" alt="Árulók logó"></h1>`;
 
-        // --- GLOBAL FUNCTIONS FOR HTML ACCESS ---
-        window.closeImageModal = function() {
-            document.getElementById('img-modal-overlay').style.display = 'none';
-        }
-
-        let lastShownImage = ""; // Hogy ne villogjon a kép minden frissítésnél
-
-        function showImageModal(src) {
-            if (lastShownImage === src) return; // Már mutattuk ezt a képet ebben a körben
-            
-            lastShownImage = src;
+        // --- ÚJ: CINEMATIC AUDIO LEJÁTSZÓ ---
+        // Ez kezeli a kép megjelenítését (FadeIn) és eltüntetését (FadeOut) a hanggal szinkronban
+        window.playCinematicAudio = function(audioSrc, imageSrc) {
             const modal = document.getElementById('img-modal-overlay');
             const img = document.getElementById('img-modal-content');
-            
-            img.src = src;
-            modal.style.display = 'flex';
+            const audio = document.getElementById('castle-audio');
+
+            if (!audioSrc) return;
+
+            // 1. Beállítás
+            img.src = imageSrc;
+            audio.src = audioSrc;
+            audio.volume = 1.0;
+
+            // 2. Kép megjelenítése (Fade In)
+            modal.classList.add('active');
+
+            // 3. Hang indítása
+            audio.play().catch(e => {
+                console.error("Hang lejátszási hiba:", e);
+                // Ha hiba van (pl. user interaction policy), akkor is tűnjön el a kép
+                setTimeout(() => modal.classList.remove('active'), 2000);
+            });
+
+            // 4. Ha vége a hangnak, tűnjön el a kép (Fade Out)
+            audio.onended = () => {
+                modal.classList.remove('active');
+            };
         }
 
-        // --- AUDIO KEZELÉS & QR ---
+        // --- BELÉPÉS & QR KEZELÉS ---
         const urlParams = new URLSearchParams(window.location.search);
         const nameFromUrl = urlParams.get('name');
 
         if (nameFromUrl && PREDEFINED_PLAYERS.includes(nameFromUrl)) {
             const modal = document.getElementById("intro-modal");
             const welcomeName = document.getElementById("welcome-name");
-            const audio = document.getElementById("castle-audio");
             
             modal.style.display = "flex";
             welcomeName.innerText = `Üdvözöllek, ${nameFromUrl}`;
             
-            if(AUDIO_FILES[nameFromUrl]) {
-                audio.src = AUDIO_FILES[nameFromUrl];
-            }
-
             document.getElementById("enter-castle-btn").addEventListener("click", () => {
-                audio.load(); 
-                audio.volume = 1.0; 
-                
-                var playPromise = audio.play();
-                if (playPromise !== undefined) {
-                    playPromise.then(_ => { console.log("Hang lejátszása sikeres."); })
-                    .catch(error => { alert("Hang hiba: " + error.name); });
-                }
-                
+                // Intro modal eltüntetése
                 modal.style.transition = "opacity 1s ease";
                 modal.style.opacity = "0";
                 setTimeout(() => { modal.style.display = "none"; }, 1000);
 
+                // Játékhoz csatlakozás
                 joinGame(nameFromUrl).then(() => {
                     window.history.replaceState({}, document.title, window.location.pathname);
+                    
+                    // --- CINEMATIC AUDIO INDÍTÁSA (BELÉPÉS) ---
+                    if(AUDIO_FILES[nameFromUrl]) {
+                        // Kérés szerint: Belépésnél arpa-all.jpg
+                        playCinematicAudio(AUDIO_FILES[nameFromUrl], 'arpa-all.jpg');
+                    }
                 });
             });
         }
@@ -327,8 +337,6 @@
             
             if (gameData.state !== currentLocalState) {
                 currentLocalState = gameData.state;
-                // Ha új állapot van, reseteljük a "már mutatott képet", hogy ha visszatérünk ide, újra mutassa
-                // KIVÉVE ha ugyanaz a kép jönne (ezt a showImageModal kezeli)
                 if (currentLocalState === "intro") audioTriggered = false;
             }
             
@@ -338,30 +346,7 @@
         // --- UI RAJZOLÁS ---
         function render(game) {
             const myPlayer = game.players[myId];
-            
-            // --- KÉP MODAL KEZELÉS ---
-            if (!game.state || game.state === "lobby") {
-                // Lobby alatt mutassuk az Arpa All képet, ha még nem látta
-                showImageModal('arpa-all.jpg');
-            } 
-            else if (game.state === "intro") {
-                // Intro alatt is maradhat
-                showImageModal('arpa-all.jpg');
-            }
-            else if (game.state === "voting") {
-                // Szavazás alatt NINCS kép (bezárjuk, vagy hagyjuk, hogy a felhasználó bezárja)
-                // Itt most hagyjuk a felhasználóra, vagy ha szeretnéd, automatikusan bezárhatjuk:
-                // document.getElementById('img-modal-overlay').style.display = 'none';
-            } 
-            else if (game.state === "started" && myPlayer) {
-                // Eredményhirdetés
-                if (myPlayer.role === "traitor") {
-                    showImageModal('arpa-megfog.jpg');
-                } else {
-                    showImageModal('arpa-setal.jpg');
-                }
-            }
-
+            const isAdmin = myPlayer && myPlayer.name === "Tomi";
 
             if (!myPlayer) {
                 appDiv.innerHTML = `
@@ -379,20 +364,18 @@
                 window.manualJoin = () => {
                     const selectedName = document.getElementById("nameSelector").value;
                     if(selectedName) {
-                        const audio = document.getElementById("castle-audio");
-                        if(AUDIO_FILES[selectedName]) {
-                            audio.src = AUDIO_FILES[selectedName];
-                            audio.volume = 1.0;
-                            audio.play().catch(e => alert("Hang hiba: " + e.message));
-                        }
                         joinGame(selectedName);
+                        // --- CINEMATIC AUDIO INDÍTÁSA (MANUÁLIS BELÉPÉS) ---
+                        if(AUDIO_FILES[selectedName]) {
+                             // Kérés szerint: Belépésnél arpa-all.jpg
+                            playCinematicAudio(AUDIO_FILES[selectedName], 'arpa-all.jpg');
+                        }
                     }
                 };
                 return;
             }
 
             const playersArray = Object.values(game.players);
-            const isAdmin = myPlayer.name === "Tomi";
 
             // 1. FÁZIS: LOBBY
             if (game.state === "lobby") {
@@ -428,14 +411,11 @@
             // 2. FÁZIS: INTRO
             if (game.state === "intro") {
                 
+                // --- CINEMATIC AUDIO INDÍTÁSA (INTRO) ---
                 if (isAdmin && !audioTriggered) {
                     audioTriggered = true;
-                    setTimeout(() => {
-                        const audio = document.getElementById("castle-audio");
-                        audio.src = "Intro.mp3"; 
-                        audio.volume = 1.0;
-                        audio.play().catch(e => console.log("Intro autoplay hiba:", e));
-                    }, 3000);
+                    // Kérés szerint: Intronál arpa-all.jpg
+                    playCinematicAudio("Intro.mp3", "arpa-all.jpg");
                 }
 
                 if (isAdmin && !introTimerRunning) {
